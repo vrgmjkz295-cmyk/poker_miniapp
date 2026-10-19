@@ -152,6 +152,8 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
 
   <!-- QUIZ -->
   <section id="quiz" style="display:flex;flex-direction:column;gap:16px">
+    <div class="row"><span class="label">Стек</span><div class="pos depth" id="depthQ"></div></div>
+    <p class="note depthnote"></p>
     <div class="row"><span class="label">Позиция</span>
       <select id="quizPos"><option value="ALL">Все позиции</option></select>
       <span class="label">Руки</span>
@@ -159,7 +161,7 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
     </div>
     <div class="felt">
       <div id="qTable" style="width:100%;display:flex;justify-content:center"></div>
-      <div class="seat">ВЫ НА <span id="qPos">CO</span> · ДО ВАС ФОЛД</div>
+      <div class="seat">ВЫ НА <span id="qPos">CO</span> · <span id="qStack">100</span> БЛАЙНДОВ · ДО ВАС ФОЛД</div>
       <div class="posname" id="qPosName"></div>
       <div class="hand" id="qHand"></div>
       <div class="code" id="qCode"></div>
@@ -167,7 +169,7 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
         <button class="b-fold" id="bFold">ФОЛД</button>
         <button class="b-raise" id="bRaise">РЕЙЗ</button>
       </div>
-      <div class="fb" id="qFb">Клавиши: F — фолд, R — рейз, пробел — дальше.</div>
+      <div class="fb" id="qFb">Клавиши: F — фолд, R — рейз или олл-ин, пробел — дальше.</div>
       <button class="next" id="bNext" hidden>Следующая раздача →</button>
     </div>
     <div class="stats">
@@ -216,11 +218,13 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
     <div class="pos" id="posBtns"></div>
     <div class="seatinfo" id="seatInfo"></div>
     <div id="rangeBlock" style="display:flex;flex-direction:column;gap:14px">
+    <div class="row"><span class="label">Стек</span><div class="pos depth" id="depthC"></div></div>
+    <p class="note depthnote"></p>
     <div class="posinfo"><b id="posName"></b><span class="pct" id="posPct"></span></div>
     <p class="note" id="posDesc"></p>
     <div class="grid" id="grid"></div>
     <div class="legend">
-      <span><i style="background:var(--raise)"></i>Рейз</span>
+      <span><i style="background:var(--raise)"></i><span id="legRaise">Рейз</span></span>
       <span><i style="background:var(--fold)"></i>Фолд</span>
       <span>Выше диагонали — одномастные (s), ниже — разномастные (o)</span>
     </div>
@@ -234,11 +238,11 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
     <ul class="ranks" id="rankList"></ul>
   </section>
 
-  <p class="note">Диапазоны упрощённые и усреднённые, это стартовая точка для кеша 6-max со 100 бб. Против агрессивных или слабых соперников границы смещаются.</p>
+  <p class="note">Диапазоны упрощённые и усреднённые, 6-max. 100 бб — кеш, 40, 20 и 10 бб — турнир с анте. Против агрессивных или слабых соперников границы смещаются.</p>
 </div>
 
 <script>
-const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData!==undefined?window.Telegram.WebApp:null;
+const tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 const inTg=!!(tg&&tg.platform&&tg.platform!=="unknown");
 function applyTgTheme(){if(inTg)document.documentElement.dataset.theme=tg.colorScheme==="dark"?"dark":"light"}
 if(inTg){tg.ready();tg.expand();applyTgTheme();tg.onEvent("themeChanged",applyTgTheme)}
@@ -272,7 +276,43 @@ function parse(str){
   });
   return set;
 }
-for(const p of ORDER){POS[p].set=parse(POS[p].range)}
+const DEPTHS={
+  100:{note:"Кеш или начало турнира. Опен-рейз 2,5–3 бб. Мелкие пары и одномастные коннекторы ценны: если попадут, можно выиграть большой стек.",
+    r:{UTG:POS.UTG.range,MP:POS.MP.range,CO:POS.CO.range,BTN:POS.BTN.range,SB:POS.SB.range}},
+  40:{note:"Середина турнира. Рейз 2–2,3 бб. Спекулятивные руки с ранних мест уходят, растёт вес тузов и бродвеев.",
+    r:{UTG:"33+, A2s+, K9s+, QTs+, JTs, T9s, ATo+, KJo+",
+       MP:"22+, A2s+, K8s+, Q9s+, J9s+, T9s, 98s, A9o+, KTo+, QJo",
+       CO:"22+, A2s+, K5s+, Q8s+, J8s+, T8s+, 98s, 87s, A7o+, KTo+, QTo+, JTo",
+       BTN:"22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 97s+, 86s+, 76s, 65s, A2o+, K7o+, Q9o+, J9o+, T9o",
+       SB:"22+, A2s+, K2s+, Q4s+, J7s+, T7s+, 97s+, 87s, 76s, A2o+, K7o+, Q8o+, J9o+, T9o"}},
+  20:{note:"Короткий стек. Минрейз 2 бб или сразу олл-ин. После флопа играть почти некогда, решают старшие карты.",
+    r:{UTG:"55+, A7s+, A5s, KTs+, QTs+, JTs, ATo+, KQo",
+       MP:"44+, A4s+, K9s+, QTs+, JTs, A9o+, KJo+",
+       CO:"22+, A2s+, K7s+, Q9s+, J9s+, T9s, A7o+, KTo+, QJo",
+       BTN:"22+, A2s+, K4s+, Q7s+, J8s+, T8s+, 98s, A2o+, K8o+, Q9o+, J9o+, T9o",
+       SB:"22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 97s+, 87s, A2o+, K6o+, Q8o+, J8o+, T8o+, 98o"}},
+  10:{note:"Пуш-фолд: только олл-ин или фолд. Диапазоны близки к расчётным таблицам (Нэш) для турнира с анте.",
+    r:{UTG:"22+, A2s+, K8s+, Q9s+, J9s+, T9s, A8o+, KJo+",
+       MP:"22+, A2s+, K6s+, Q8s+, J8s+, T8s+, A5o+, KTo+, QJo",
+       CO:"22+, A2s+, K3s+, Q6s+, J7s+, T7s+, 97s+, 87s, A2o+, K9o+, QTo+, JTo",
+       BTN:"22+, A2s+, K2s+, Q3s+, J5s+, T6s+, 96s+, 86s+, 75s+, 65s, A2o+, K5o+, Q8o+, J8o+, T8o+, 98o",
+       SB:"22+, A2s+, K2s+, Q2s+, J2s+, T4s+, 95s+, 85s+, 74s+, 64s+, 54s, A2o+, K2o+, Q6o+, J7o+, T7o+, 97o+, 87o"}}
+};
+let depth=100;
+try{const d=+localStorage.getItem("sh-depth");if(DEPTHS[d])depth=d}catch(e){}
+const isPush=()=>depth===10;
+const pk=p=>depth===100?p:depth+p;
+function applyDepth(d){depth=d;try{localStorage.setItem("sh-depth",d)}catch(e){}
+  for(const p of ORDER){POS[p].range=DEPTHS[d].r[p];POS[p].set=parse(POS[p].range)}}
+applyDepth(depth);
+function depthCtl(el){el.innerHTML=[100,40,20,10].map(d=>`<button id="${el.id}-${d}" data-d="${d}" aria-pressed="${d===depth}">${d} бб</button>`).join("");
+  el.onclick=e=>{const b=e.target.closest("[data-d]");if(!b)return;applyDepth(+b.dataset.d);syncDepthUI();renderChart();renderStats();deal()}}
+function syncDepthUI(){
+  document.querySelectorAll(".depth button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.d===depth));
+  document.querySelectorAll(".depthnote").forEach(n=>n.textContent=DEPTHS[depth].note);
+  document.getElementById("bRaise").textContent=isPush()?"ОЛЛ-ИН":"РЕЙЗ";
+  document.getElementById("legRaise").textContent=isPush()?"Олл-ин":"Рейз";
+}
 const combos=h=>h.length===2?6:h[2]==="s"?4:12;
 const pctOf=set=>{let c=0;set.forEach(h=>c+=combos(h));return (c/1326*100).toFixed(1)};
 const ALL=[];for(let i=0;i<13;i++)for(let j=0;j<13;j++)ALL.push({h:handAt(i,j),i,j});
@@ -334,7 +374,7 @@ function renderChart(){
   if(cur==="BB")return;
   const P=POS[cur];
   document.getElementById("posName").textContent=P.name;
-  document.getElementById("posPct").textContent=`${pctOf(P.set)}% рук · ${P.set.size} из 169`;
+  document.getElementById("posPct").textContent=`${depth} бб · ${pctOf(P.set)}% рук · ${P.set.size} из 169`;
   document.getElementById("posDesc").textContent=P.desc;
   document.getElementById("posRange").textContent=P.range;
   drawGrid(document.getElementById("grid"),cur);
@@ -388,12 +428,13 @@ function deal(){
   let s2=s1;if(h.length===2||h[2]==="o"){do{s2=Math.floor(Math.random()*4)}while(s2===s1)}
   q={p,h,cards:[[h[0],s1],[h[1],s2]]};answered=false;
   document.getElementById("qPos").textContent=p;
+  document.getElementById("qStack").textContent=depth;
   document.getElementById("qPosName").textContent=`${SEAT[p].en} · ${SEAT[p].ru}`;
   document.getElementById("qTable").innerHTML=tableSVG(p,{felt:true,folded:SEAT_ORDER.filter(x=>SEAT[x].pre<SEAT[p].pre)});
   document.getElementById("qHand").innerHTML=q.cards.map(([r,s])=>
     `<div class="card ${s===1||s===2?"red":""}"><div class="rk">${r==="T"?"10":r}</div><div class="st">${SUITS[s]}</div></div>`).join("");
   document.getElementById("qCode").textContent=h+(h.length===2?" · пара":h[2]==="s"?" · одномастные":" · разномастные");
-  document.getElementById("qFb").textContent="Рейз или фолд?";
+  document.getElementById("qFb").textContent=isPush()?"Олл-ин или фолд?":"Рейз или фолд?";
   document.getElementById("bNext").hidden=true;
   document.getElementById("bFold").disabled=document.getElementById("bRaise").disabled=false;
   document.getElementById("quizGridWrap").hidden=true;
@@ -402,14 +443,14 @@ function answer(raise){
   if(answered||!q)return;answered=true;
   const should=POS[q.p].set.has(q.h),ok=raise===should;haptic(ok);
   stats.n++;if(ok){stats.ok++;stats.streak++;stats.best=Math.max(stats.best,stats.streak)}else stats.streak=0;
-  const ps=stats.pos[q.p]||(stats.pos[q.p]={n:0,ok:0});ps.n++;if(ok)ps.ok++;save();
+  const ps=stats.pos[pk(q.p)]||(stats.pos[pk(q.p)]={n:0,ok:0});ps.n++;if(ok)ps.ok++;save();
   const tok=POS[q.p].range.split(", ").find(t=>parse(t).has(q.h));
   document.getElementById("qFb").innerHTML=ok
-    ?`<strong class="ok">Верно.</strong> ${should?`${q.h} на ${q.p} открываем: входит в ${tok}.`:`${q.h} на ${q.p} не открываем.`}`
-    :`<strong class="no">Ошибка.</strong> ${should?`Правильно рейз: ${q.h} входит в ${tok}.`:`Правильно фолд: ${q.h} слишком слабая для ${q.p}.`}`;
+    ?`<strong class="ok">Верно.</strong> ${should?`${q.h} на ${q.p} при ${depth} бб ${isPush()?"пушим":"открываем"}: входит в ${tok}.`:`${q.h} на ${q.p} при ${depth} бб не ${isPush()?"пушим":"открываем"}.`}`
+    :`<strong class="no">Ошибка.</strong> ${should?`Правильно ${isPush()?"олл-ин":"рейз"}: при ${depth} бб ${q.h} входит в ${tok}.`:`Правильно фолд: при ${depth} бб ${q.h} слишком слабая для ${q.p}.`}`;
   document.getElementById("bNext").hidden=false;
   document.getElementById("bFold").disabled=document.getElementById("bRaise").disabled=true;
-  document.getElementById("quizGridLabel").textContent=`Таблица ${q.p} · ${pctOf(POS[q.p].set)}% рук`;
+  document.getElementById("quizGridLabel").textContent=`Таблица ${q.p} · ${depth} бб · ${pctOf(POS[q.p].set)}% рук`;
   drawGrid(document.getElementById("quizGrid"),q.p,q.h);
   document.getElementById("quizGridWrap").hidden=false;
   renderStats();
@@ -418,7 +459,7 @@ function renderStats(){
   document.getElementById("sAcc").textContent=stats.n?Math.round(stats.ok/stats.n*100)+"%":"—";
   document.getElementById("sStreak").textContent=stats.streak;
   document.getElementById("sBest").textContent=stats.best;
-  document.getElementById("byPos").innerHTML=ORDER.map(p=>{const s=stats.pos[p];
+  document.getElementById("byPos").innerHTML=ORDER.map(p=>{const s=stats.pos[pk(p)];
     return `<div>${p}<b>${s&&s.n?Math.round(s.ok/s.n*100)+"%":"—"}</b>${s?s.n:0} разд.</div>`}).join("");
 }
 document.getElementById("bFold").onclick=()=>answer(false);
@@ -557,6 +598,7 @@ document.addEventListener("keydown",e=>{
   if(k==="f"||k==="а")answer(false);else if(k==="r"||k==="к")answer(true);
   else if((k===" "||k==="enter")&&answered){e.preventDefault();deal()}
 });
+depthCtl(document.getElementById("depthQ"));depthCtl(document.getElementById("depthC"));syncDepthUI();renderChart();
 renderStats();deal();renderBoardStats();dealBoard();
 try{if(cloudOK)tg.CloudStorage.getItem("sh-stats",(err,v)=>{if(err||!v)return;try{const c=JSON.parse(v);if(c&&c.pos){stats=c;stats.board=stats.board||{n:0,ok:0,streak:0,best:0};renderStats();renderBoardStats()}}catch(e){}})}catch(e){}
 </script>
