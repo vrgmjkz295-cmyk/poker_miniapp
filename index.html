@@ -12,8 +12,6 @@ img{max-width:100%}
 [hidden]{display:none!important}
 </style>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Chivo:wght@400;600;800&family=Chivo+Mono:wght@500;700&display=swap">
 <style>
 /* Layout: one narrow column, tabs on top; the 13×13 matrix is the centrepiece, quiz is a dealt hand on felt */
 :root{
@@ -21,7 +19,9 @@ img{max-width:100%}
   --felt:#1d4a36; --felt-fg:#eef4ef; --brass:#a77d2c;
   --raise:#2f8a5b; --raise-fg:#ffffff; --fold:#dfe5e0; --fold-fg:#7b877f;
   --good:#2f8a5b; --bad:#c2412f; --card:#ffffff; --card-red:#c2412f; --card-black:#17201b;
-  --f-display:"Gloock", Georgia, serif; --f-body:"Chivo", system-ui, sans-serif; --f-mono:"Chivo Mono", ui-monospace, monospace;
+  --f-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --f-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono","Liberation Mono",monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0d1511; --surface:#14201a; --fg:#e6ede8; --muted:#90a097; --line:#26362d;
@@ -36,53 +36,91 @@ img{max-width:100%}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
 .wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
-h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,7vw,40px);line-height:1.05;margin:0;text-wrap:balance}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(28px,7vw,40px);line-height:1.05;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0}
 .lede{color:var(--muted);margin:6px 0 0;max-width:60ch}
 .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
-.tabs button{flex:1;border:0;background:none;color:var(--muted);font:600 14px var(--f-body);padding:9px 6px;border-radius:999px;cursor:pointer}
+.tabs button{flex:1;border:0;background:none;color:var(--muted);font:600 14px var(--f-body);padding:9px 4px;border-radius:999px;cursor:pointer;white-space:nowrap}
 .tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
 button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .pos{display:flex;flex-wrap:wrap;gap:6px}
-.pos button{border:1px solid var(--line);background:var(--surface);color:var(--fg);font:700 13px var(--f-mono);padding:7px 12px;border-radius:8px;cursor:pointer}
+.pos button{border:1px solid var(--line);background:var(--surface);color:var(--fg);font:700 13px var(--f-mono);padding:7px 11px;border-radius:8px;cursor:pointer}
 .pos button[aria-pressed="true"]{background:var(--felt);color:var(--felt-fg);border-color:var(--felt)}
+.controls{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;align-items:center}
+.controls .label{white-space:nowrap}
+.controls select{width:100%;min-width:0;max-width:420px}
 .posinfo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-.posinfo b{font-family:var(--f-display);font-weight:400;font-size:22px}
+.posinfo b{font-family:var(--f-display);font-weight:600;font-size:22px}
 .pct{font:700 14px var(--f-mono);color:var(--brass);font-variant-numeric:tabular-nums}
 .grid{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;width:100%;max-width:560px}
 .cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font:500 clamp(8px,2.3vw,12px) var(--f-mono);border-radius:3px;background:var(--fold);color:var(--fold-fg);user-select:none}
 .cell.r{background:var(--raise);color:var(--raise-fg);font-weight:700}
+.cell.t{background:var(--brass);color:#1b1407;font-weight:700}
 .cell.pair{box-shadow:inset 0 0 0 1px var(--brass)}
-.cell.hl{outline:2px solid var(--brass);outline-offset:1px;z-index:1}
+.cell.t.pair{box-shadow:inset 0 0 0 1px var(--fg)}
+.cell.hl{outline:2px solid var(--fg);outline-offset:1px;z-index:1}
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
 .note{font-size:13px;color:var(--muted);max-width:62ch;margin:0}
 .felt{background:var(--felt);color:var(--felt-fg);border-radius:20px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
-.seat{font:700 12px var(--f-mono);letter-spacing:.14em;background:rgba(0,0,0,.25);padding:5px 12px;border-radius:999px}
+.seat{font:700 12px var(--f-mono);letter-spacing:.12em;background:rgba(0,0,0,.25);padding:5px 12px;border-radius:999px}
 .seat span{color:var(--brass)}
 .hand{display:flex;gap:10px}
-.card{width:72px;height:102px;background:var(--card);border-radius:9px;box-shadow:0 6px 16px rgba(0,0,0,.35);display:flex;flex-direction:column;justify-content:space-between;padding:6px 8px;font-family:var(--f-display);color:var(--card-black)}
+.card{--pip:14px;--idx:16px;position:relative;flex:none;width:76px;height:108px;background:var(--card);border-radius:9px;box-shadow:0 6px 16px rgba(0,0,0,.35);font-family:var(--f-display);font-weight:600;color:var(--card-black);transition:opacity .2s;overflow:hidden}
 .card.red{color:var(--card-red)}
-.card .rk{font-size:28px;line-height:1;text-align:left}
-.card .st{font-size:30px;line-height:1;text-align:right}
+.card .idx{position:absolute;display:flex;flex-direction:column;align-items:center;font-size:var(--idx);line-height:.95;letter-spacing:-.04em}
+.card .idx i{font-style:normal;font-size:calc(var(--idx)*.8);line-height:1}
+.card .idx.tl{top:5px;left:5px}
+.card .idx.br{bottom:5px;right:5px;transform:rotate(180deg)}
+.card .face{position:absolute;inset:14% 33%}
+.card .pip{position:absolute;transform:translate(-50%,-50%);font-size:var(--pip);line-height:1}
+.card .pip.flip{transform:translate(-50%,-50%) rotate(180deg)}
+.card .ace{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:calc(var(--pip)*2.6);line-height:1}
+.card .court{position:absolute;inset:14% 23%;border:1.5px solid currentColor;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:rgba(167,125,44,.13)}
+.card .court::before{content:"";position:absolute;inset:2px;border:1px dotted currentColor;border-radius:3px;opacity:.45}
+.card .court .g{font-size:calc(var(--pip)*2);line-height:1}
+.card .court .s{font-size:calc(var(--pip)*.9);line-height:1}
 .code{font:700 15px var(--f-mono);opacity:.85}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:340px}
-.actions button{border:0;border-radius:12px;padding:14px;font:800 16px var(--f-body);letter-spacing:.04em;cursor:pointer}
+.actions{display:grid;grid-template-columns:repeat(var(--n,2),1fr);gap:10px;width:100%;max-width:400px}
+.actions button{border:0;border-radius:12px;padding:14px 8px;font:800 16px var(--f-body);letter-spacing:.04em;cursor:pointer}
 .b-fold{background:rgba(255,255,255,.12);color:var(--felt-fg)}
+.b-call{background:rgba(255,255,255,.24);color:var(--felt-fg)}
 .b-raise{background:var(--brass);color:#1b1407}
 .actions button:disabled{opacity:.45;cursor:default}
-.fb{min-height:48px;font-size:14px;max-width:46ch}
+.actions button.right{opacity:1;outline:3px solid #8fe0b2}
+.timer{width:100%;max-width:400px;height:5px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:var(--brass)}
+.fb{min-height:48px;font-size:14px;max-width:48ch}
 .fb strong.ok{color:#8fe0b2}.fb strong.no{color:#ffb3a5}
 .next{border:1px solid rgba(255,255,255,.35);background:none;color:var(--felt-fg);border-radius:999px;padding:8px 18px;font:600 14px var(--f-body);cursor:pointer}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
 .stat .v{font:700 22px var(--f-mono);font-variant-numeric:tabular-nums}
-.bypos{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-variant-numeric:tabular-nums}
-.bypos div{text-align:center;font:500 12px var(--f-mono);color:var(--muted)}
+.bypos{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px;font-variant-numeric:tabular-nums}
+.bypos div{text-align:center;font:500 12px var(--f-mono);color:var(--muted);line-height:1.35}
 .bypos b{display:block;font-size:15px;color:var(--fg)}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
 .reset{border:0;background:none;color:var(--muted);text-decoration:underline;font:13px var(--f-body);cursor:pointer;padding:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.goal{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:14px}
+.goal b{font:700 18px var(--f-mono);font-variant-numeric:tabular-nums}
+.gbar{height:8px;border-radius:4px;background:var(--fold);overflow:hidden}
+.gbar i{display:block;height:100%;background:var(--raise);border-radius:4px}
+.pchart{width:100%;display:block}
+.pchart .pbar{fill:var(--raise)}
+.pchart .pbar.today{fill:var(--brass)}
+.pchart .ptx{fill:var(--muted);font:600 9px var(--f-mono);text-anchor:middle}
+.pchart .ptx.today{fill:var(--fg)}
+.pchart .pgoal{stroke:var(--muted);stroke-dasharray:3 3;stroke-width:1}
+.pchart .pgl{fill:var(--muted);font:600 9px var(--f-body)}
+.pchart .pbase{stroke:var(--line);stroke-width:1}
+.lb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.lb li{display:grid;grid-template-columns:24px 1fr auto;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.lb li.me{font-weight:700}
+.lb .n{font:700 12px var(--f-mono);color:var(--brass)}
+.lb .s{font:600 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
 .ranks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .ranks li{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .ranks .n{font:700 13px var(--f-mono);color:var(--brass)}
@@ -93,14 +131,17 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
 .mini span.red{color:var(--card-red)}
 .mini span.dim{opacity:.35}
 .tbl{width:100%;max-width:420px;align-self:center;display:block}
-.tbl.small{max-width:300px}
+.tbl.small{max-width:310px}
 .tbl .tab{fill:var(--felt);stroke:var(--brass);stroke-width:2}
 .tbl.onfelt .tab{fill:rgba(0,0,0,.2);stroke:rgba(255,255,255,.22)}
 .tbl .st-c{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
 .tbl .st-t{fill:var(--fg);font:700 12px var(--f-mono);text-anchor:middle}
+.tbl.n9 .st-t{font-size:10px}
 .tbl .st-n{fill:var(--muted);font:600 8.5px var(--f-body);text-anchor:middle}
 .tbl .sel .st-c{fill:var(--brass);stroke:var(--brass)}
 .tbl .sel .st-t,.tbl .sel .st-n{fill:#1b1407}
+.tbl .rz .st-c{stroke:var(--bad);stroke-width:3}
+.tbl .rz .st-n{fill:var(--bad)}
 .tbl .fold{opacity:.4}
 .tbl .chip{fill:#f4f6f3;stroke:#1b1407;stroke-width:1}
 .tbl .chip-t{font:800 9px var(--f-body);fill:#1b1407;text-anchor:middle}
@@ -108,30 +149,36 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
 .tbl .mid{fill:var(--felt-fg);font:600 9.5px var(--f-body);text-anchor:middle;opacity:.7;letter-spacing:.1em}
 .tbl .click{cursor:pointer}
 .tbl .click:focus-visible .st-c{stroke:var(--brass);stroke-width:3}
-.seatinfo{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.seatinfo{display:flex;flex-direction:column;gap:6px}
 .seatinfo .ab{font:700 13px var(--f-mono);color:var(--brass);letter-spacing:.06em}
-.seatinfo .ttl{font-family:var(--f-display);font-size:22px;line-height:1.15}
+.seatinfo .ttl{font-family:var(--f-display);font-weight:600;font-size:22px;line-height:1.15}
 .seatinfo .ord{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .seatinfo .ord b{color:var(--fg);font-variant-numeric:tabular-nums}
 .posname{font-size:13px;opacity:.8;margin-top:-6px}
 .board{gap:6px;flex-wrap:wrap;justify-content:center}
-.card.sm{width:50px;height:70px;padding:4px 6px;border-radius:7px}
-.card.sm .rk{font-size:20px}.card.sm .st{font-size:22px}
-.card{transition:opacity .2s}
+.card.sm{--pip:8.5px;--idx:11.5px;width:52px;height:74px;border-radius:7px}
+.card.sm .idx.tl{top:3px;left:3px}.card.sm .idx.br{bottom:3px;right:3px}
+.card.sm .face{inset:15% 33%}
+.card.sm .court{inset:16% 24%}
 .card.off{opacity:.35}
 .card.use{box-shadow:0 0 0 3px var(--brass),0 6px 16px rgba(0,0,0,.35)}
 .duo{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}
 .who{display:flex;flex-direction:column;align-items:center;gap:6px}
 .who .label{color:var(--felt-fg);opacity:.7}
 .who .hand{gap:6px}
+.potline{font:600 14px var(--f-mono);background:rgba(0,0,0,.25);padding:6px 12px;border-radius:10px}
+.potline b{color:var(--brass)}
+.outs{font:600 13px var(--f-mono);letter-spacing:.04em;max-width:46ch;word-spacing:3px}
+.outs .red{color:#ffb3a5}
 .choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:420px}
 .choices.three{grid-template-columns:repeat(3,1fr)}
+.choices.four{grid-template-columns:repeat(4,1fr)}
 .choices button{background:rgba(255,255,255,.1);color:var(--felt-fg);border:0;border-radius:10px;padding:10px 8px;font:600 14px var(--f-body);cursor:pointer}
 .choices button.right{background:var(--brass);color:#1b1407}
 .choices button.wrong{background:#8a2f22;color:#fff}
 .choices button:disabled{cursor:default}
 .choices button:disabled:not(.right):not(.wrong){opacity:.4}
-@media (max-width:480px){.ranks li{grid-template-columns:24px 1fr}.ranks .mini{grid-column:2}.card{width:62px;height:88px}.card .rk{font-size:24px}.card .st{font-size:26px}}
+@media (max-width:480px){.ranks li{grid-template-columns:24px 1fr}.ranks .mini{grid-column:2}.card{--pip:12px;--idx:14px;width:66px;height:94px}.card.sm{--pip:8px;--idx:11px;width:50px;height:71px}.tabs button{font-size:13px}}
 @media (prefers-reduced-motion:no-preference){.hand .card{animation:deal .25s ease-out both}.hand .card+.card{animation-delay:.07s}}
 @keyframes deal{from{transform:translateY(-10px);opacity:.3}to{transform:none;opacity:1}}
 </style>
@@ -140,36 +187,44 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
 <div class="wrap">
   <header>
     <h1>Тренажёр стартовых рук</h1>
-    <p class="lede">Холдем, 6-max, открытие рейзом, когда до вас все сбросили. Выучите таблицу по позициям, потом проверьте себя на раздачах.</p>
+    <p class="lede">Холдем: первый вход по позициям, ответ на рейз, защита большого блайнда, комбинации и ауты. Выучите таблицы, потом проверьте себя на раздачах.</p>
   </header>
 
   <nav class="tabs" role="tablist">
     <button role="tab" id="t-quiz" aria-selected="true" data-tab="quiz">Тренировка</button>
     <button role="tab" id="t-board" aria-selected="false" data-tab="board">На столе</button>
-    <button role="tab" id="t-chart" aria-selected="false" data-tab="chart">Таблица</button>
+    <button role="tab" id="t-chart" aria-selected="false" data-tab="chart">Таблицы</button>
     <button role="tab" id="t-ranks" aria-selected="false" data-tab="ranks">Комбинации</button>
   </nav>
 
   <!-- QUIZ -->
   <section id="quiz" style="display:flex;flex-direction:column;gap:16px">
-    <div class="row"><span class="label">Стек</span><div class="pos depth" id="depthQ"></div></div>
-    <p class="note depthnote"></p>
-    <div class="row"><span class="label">Позиция</span>
-      <select id="quizPos"><option value="ALL">Все позиции</option></select>
+    <div class="controls">
+      <span class="label">Ситуация</span>
+      <select id="qSit">
+        <option value="open">Первый вход (до вас все сбросили)</option>
+        <option value="vs">Ответ на рейз</option>
+        <option value="bb">Защита большого блайнда</option>
+        <option value="mix">Всё вперемешку</option>
+      </select>
+      <span class="label openOnly">Стол</span><div class="pos fmt openOnly" id="fmtQ"></div>
+      <span class="label openOnly">Стек</span><div class="pos depth openOnly" id="depthQ"></div>
+      <span class="label openOnly" id="posL">Позиция</span><select id="quizPos" class="openOnly"></select>
       <span class="label">Руки</span>
-      <select id="quizMode"><option value="edge">Пограничные чаще</option><option value="any">Любые</option></select>
+      <select id="quizMode"><option value="edge">Пограничные чаще</option><option value="any">Любые</option><option value="mist">Только мои ошибки</option></select>
+      <span class="label">Время</span>
+      <select id="qTime"><option value="0">Без ограничения</option><option value="5">5 секунд на ответ</option><option value="3">3 секунды на ответ</option></select>
     </div>
+    <p class="note" id="qNote"></p>
     <div class="felt">
       <div id="qTable" style="width:100%;display:flex;justify-content:center"></div>
-      <div class="seat">ВЫ НА <span id="qPos">CO</span> · <span id="qStack">100</span> БЛАЙНДОВ · ДО ВАС ФОЛД</div>
+      <div class="seat" id="qSeat"></div>
       <div class="posname" id="qPosName"></div>
       <div class="hand" id="qHand"></div>
       <div class="code" id="qCode"></div>
-      <div class="actions">
-        <button class="b-fold" id="bFold">ФОЛД</button>
-        <button class="b-raise" id="bRaise">РЕЙЗ</button>
-      </div>
-      <div class="fb" id="qFb">Клавиши: F — фолд, R — рейз или олл-ин, пробел — дальше.</div>
+      <div class="timer" id="qTimer" hidden><i id="qTimerBar"></i></div>
+      <div class="actions" id="qActions"></div>
+      <div class="fb" id="qFb"></div>
       <button class="next" id="bNext" hidden>Следующая раздача →</button>
     </div>
     <div class="stats">
@@ -179,19 +234,33 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
     </div>
     <div class="bypos" id="byPos"></div>
     <div class="row" style="justify-content:space-between">
-      <p class="note">После ответа подсвечивается рука в таблице позиции, чтобы видеть, где проходит граница.</p>
+      <p class="note" id="mistInfo"></p>
       <button class="reset" id="bReset">Сбросить статистику</button>
     </div>
     <div id="quizGridWrap" style="display:flex;flex-direction:column;gap:8px" hidden>
       <span class="label" id="quizGridLabel"></span>
       <div class="grid" id="quizGrid"></div>
+      <div class="legend" id="quizLegend"></div>
+    </div>
+    <div class="panel" id="progress">
+      <h2>Прогресс</h2>
+      <div class="goal"><span>Сегодня <b id="gToday">0</b> из <span id="gGoal">20</span> раздач</span><span class="note" id="gStreak"></span></div>
+      <div class="gbar"><i id="gBar" style="width:0%"></i></div>
+      <svg class="pchart" id="pChart" viewBox="0 0 360 150" role="img" aria-label="Раздачи и точность за 14 дней"></svg>
+      <p class="note">Столбик — сколько раздач вы сыграли за день во всех режимах, цифра над ним — точность. Пунктир — цель на день.</p>
+    </div>
+    <div class="panel" id="lbBlock" hidden>
+      <h2>Рейтинг недели</h2>
+      <ol class="lb" id="lbList"></ol>
+      <p class="note">Верные ответы с понедельника среди всех, кто открывает тренажёр через бота.</p>
     </div>
   </section>
 
   <!-- BOARD -->
   <section id="board" hidden style="display:flex;flex-direction:column;gap:16px">
-    <div class="row"><span class="label">Задание</span>
-      <select id="bMode"><option value="combo">Какая у меня комбинация</option><option value="win">Кто выиграл банк</option></select>
+    <div class="controls">
+      <span class="label">Задание</span>
+      <select id="bMode"><option value="combo">Какая у меня комбинация</option><option value="win">Кто выиграл банк</option><option value="outs">Ауты и шансы банка</option></select>
       <span class="label" id="bStreetL">Улица</span>
       <select id="bStreet"><option value="rnd">Любая</option><option value="3">Флоп</option><option value="4">Тёрн</option><option value="5">Ривер</option></select>
     </div>
@@ -199,8 +268,10 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
       <div class="seat" id="bSeat">ФЛОП</div>
       <div class="hand board" id="bBoard"></div>
       <div class="duo" id="bHands"></div>
+      <div class="potline" id="bPot" hidden></div>
       <div class="choices" id="bChoices"></div>
       <div class="fb" id="bFb"></div>
+      <div class="outs" id="bOuts" hidden></div>
       <button class="next" id="bNextB" hidden>Следующая раздача →</button>
     </div>
     <div class="stats">
@@ -208,27 +279,25 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
       <div class="stat"><div class="label">Серия</div><div class="v" id="bStreak">0</div></div>
       <div class="stat"><div class="label">Рекорд</div><div class="v" id="bBest">0</div></div>
     </div>
-    <p class="note">Комбинация всегда из лучших 5 карт: ваши 2 + общие. После ответа подсвечиваются карты, которые её составляют. Пробел — следующая раздача.</p>
+    <p class="note" id="bNote"></p>
   </section>
 
   <!-- CHART -->
   <section id="chart" hidden style="display:flex;flex-direction:column;gap:14px">
-    <p class="note">Шесть мест за столом 6-max. Нажмите на место, чтобы увидеть расшифровку и его таблицу. Чем позже вы ходите, тем больше знаете о соперниках, поэтому с поздних мест открываем больше рук.</p>
-    <div id="tableChart"></div>
-    <div class="pos" id="posBtns"></div>
-    <div class="seatinfo" id="seatInfo"></div>
-    <div id="rangeBlock" style="display:flex;flex-direction:column;gap:14px">
-    <div class="row"><span class="label">Стек</span><div class="pos depth" id="depthC"></div></div>
-    <p class="note depthnote"></p>
-    <div class="posinfo"><b id="posName"></b><span class="pct" id="posPct"></span></div>
-    <p class="note" id="posDesc"></p>
-    <div class="grid" id="grid"></div>
-    <div class="legend">
-      <span><i style="background:var(--raise)"></i><span id="legRaise">Рейз</span></span>
-      <span><i style="background:var(--fold)"></i>Фолд</span>
-      <span>Выше диагонали — одномастные (s), ниже — разномастные (o)</span>
+    <div class="controls">
+      <span class="label">Ситуация</span><select id="cSit"></select>
+      <span class="label openC">Стол</span><div class="pos fmt openC" id="fmtC"></div>
+      <span class="label openC">Стек</span><div class="pos depth openC" id="depthC"></div>
     </div>
-    <p class="note" id="posRange" style="font-family:var(--f-mono);font-size:12px"></p>
+    <p class="note" id="cNote"></p>
+    <div id="tableChart"></div>
+    <div class="pos openC" id="posBtns"></div>
+    <div class="panel seatinfo" id="seatInfo"></div>
+    <div id="rangeBlock" style="display:flex;flex-direction:column;gap:14px">
+      <div class="posinfo"><b id="posName"></b><span class="pct" id="posPct"></span></div>
+      <div class="grid" id="grid"></div>
+      <div class="legend" id="cLegend"></div>
+      <p class="note" id="posRange" style="font-family:var(--f-mono);font-size:12px"></p>
     </div>
   </section>
 
@@ -238,150 +307,247 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
     <ul class="ranks" id="rankList"></ul>
   </section>
 
-  <p class="note">Диапазоны упрощённые и усреднённые, 6-max. 100 бб — кеш, 40, 20 и 10 бб — турнир с анте. Против агрессивных или слабых соперников границы смещаются.</p>
+  <p class="note">Диапазоны упрощённые и усреднённые. Первый вход: 100 бб — кеш, 40, 20 и 10 бб — турнир с анте. Ответ на рейз и защита BB — 100 бб, 6-max, открытие 2,5 бб. Против агрессивных или слабых соперников границы смещаются.</p>
 </div>
 
 <script>
-const tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
-const inTg=!!(tg&&tg.platform&&tg.platform!=="unknown");
-function applyTgTheme(){if(inTg)document.documentElement.dataset.theme=tg.colorScheme==="dark"?"dark":"light"}
-if(inTg){tg.ready();tg.expand();applyTgTheme();tg.onEvent("themeChanged",applyTgTheme)}
-const haptic=ok=>{try{if(inTg)tg.HapticFeedback.notificationOccurred(ok?"success":"error")}catch(e){}};
-const cloudOK=inTg&&tg.isVersionAtLeast&&tg.isVersionAtLeast("6.9");
-</script>
-<script>
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
 const R="AKQJT98765432";
-const POS={
-  UTG:{name:"UTG — первым слова",desc:"Самая ранняя позиция: после вас ещё пятеро. Играем только сильное.",
-    range:"22+, A2s+, K9s+, QTs+, JTs, T9s, AJo+, KQo"},
-  MP:{name:"MP — средняя",desc:"Чуть шире UTG: добавляются связки и бродвей разномастные.",
-    range:"22+, A2s+, K8s+, Q9s+, J9s+, T9s, 98s, 87s, ATo+, KJo+, QJo"},
-  CO:{name:"CO — перед баттоном",desc:"Позади трое. Открываем треть рук, много одномастных.",
-    range:"22+, A2s+, K5s+, Q8s+, J8s+, T8s+, 97s+, 87s, 76s, 65s, A8o+, KTo+, QTo+, JTo"},
-  BTN:{name:"BTN — баттон",desc:"Лучшая позиция: на всех улицах ходите последним. Открываем почти половину.",
-    range:"22+, A2s+, K2s+, Q4s+, J6s+, T6s+, 96s+, 85s+, 75s+, 64s+, 54s, A2o+, K8o+, Q9o+, J9o+, T8o+, 98o"},
-  SB:{name:"SB — малый блайнд",desc:"Против одного BB, но без позиции. Широко, стратегия рейз-или-фолд.",
-    range:"22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 97s+, 86s+, 75s+, 65s, 54s, A2o+, K9o+, Q9o+, J9o+, T9o"}
-};
-const ORDER=["UTG","MP","CO","BTN","SB"];
 const ri=c=>R.indexOf(c);
+const SUITS=["♠","♥","♦","♣"];
 function handAt(i,j){return i===j?R[i]+R[j]:i<j?R[i]+R[j]+"s":R[j]+R[i]+"o"}
+const ALL=[];for(let i=0;i<13;i++)for(let j=0;j<13;j++)ALL.push({h:handAt(i,j),i,j});
+const combos=h=>h.length===2?6:h[2]==="s"?4:12;
+const pctOf=set=>{let c=0;set.forEach(h=>c+=combos(h));return (c/1326*100).toFixed(1)};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function dayKey(d=new Date()){const z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())}
+
+/* range strings: "22+", "A2s+", "KQo", "22-99", "A2s-ATs" */
 function parse(str){
-  const set=new Set();
-  str.split(",").map(s=>s.trim()).forEach(t=>{
+  const set=new Set();if(!str)return set;
+  str.split(",").map(s=>s.trim()).filter(Boolean).forEach(t=>{
+    if(t.includes("-")){
+      const [a,b]=t.split("-");
+      if(a[0]===a[1]){let i1=ri(a[0]),i2=ri(b[0]);if(i1>i2)[i1,i2]=[i2,i1];for(let i=i1;i<=i2;i++)set.add(R[i]+R[i])}
+      else{const k=a[2]||"";let i1=ri(a[1]),i2=ri(b[1]);if(i1>i2)[i1,i2]=[i2,i1];for(let i=i1;i<=i2;i++)set.add(a[0]+R[i]+k)}
+      return;
+    }
     const plus=t.endsWith("+");t=t.replace("+","");
     const a=t[0],b=t[1],k=t[2]||"";
-    if(a===b){const s=ri(a);for(let i=plus?0:s;i<=s;i++)set.add(R[i]+R[i]);}
-    else{const hi=ri(a),lo=ri(b);for(let i=plus?hi+1:lo;i<=lo;i++)set.add(a+R[i]+k);}
+    if(a===b){const s=ri(a);for(let i=plus?0:s;i<=s;i++)set.add(R[i]+R[i])}
+    else{const hi=ri(a),lo=ri(b);for(let i=plus?hi+1:lo;i<=lo;i++)set.add(a+R[i]+k)}
   });
   return set;
 }
-const DEPTHS={
-  100:{note:"Кеш или начало турнира. Опен-рейз 2,5–3 бб. Мелкие пары и одномастные коннекторы ценны: если попадут, можно выиграть большой стек.",
-    r:{UTG:POS.UTG.range,MP:POS.MP.range,CO:POS.CO.range,BTN:POS.BTN.range,SB:POS.SB.range}},
-  40:{note:"Середина турнира. Рейз 2–2,3 бб. Спекулятивные руки с ранних мест уходят, растёт вес тузов и бродвеев.",
-    r:{UTG:"33+, A2s+, K9s+, QTs+, JTs, T9s, ATo+, KJo+",
-       MP:"22+, A2s+, K8s+, Q9s+, J9s+, T9s, 98s, A9o+, KTo+, QJo",
-       CO:"22+, A2s+, K5s+, Q8s+, J8s+, T8s+, 98s, 87s, A7o+, KTo+, QTo+, JTo",
-       BTN:"22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 97s+, 86s+, 76s, 65s, A2o+, K7o+, Q9o+, J9o+, T9o",
-       SB:"22+, A2s+, K2s+, Q4s+, J7s+, T7s+, 97s+, 87s, 76s, A2o+, K7o+, Q8o+, J9o+, T9o"}},
-  20:{note:"Короткий стек. Минрейз 2 бб или сразу олл-ин. После флопа играть почти некогда, решают старшие карты.",
-    r:{UTG:"55+, A7s+, A5s, KTs+, QTs+, JTs, ATo+, KQo",
-       MP:"44+, A4s+, K9s+, QTs+, JTs, A9o+, KJo+",
-       CO:"22+, A2s+, K7s+, Q9s+, J9s+, T9s, A7o+, KTo+, QJo",
-       BTN:"22+, A2s+, K4s+, Q7s+, J8s+, T8s+, 98s, A2o+, K8o+, Q9o+, J9o+, T9o",
-       SB:"22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 97s+, 87s, A2o+, K6o+, Q8o+, J8o+, T8o+, 98o"}},
-  10:{note:"Пуш-фолд: только олл-ин или фолд. Диапазоны близки к расчётным таблицам (Нэш) для турнира с анте.",
-    r:{UTG:"22+, A2s+, K8s+, Q9s+, J9s+, T9s, A8o+, KJo+",
-       MP:"22+, A2s+, K6s+, Q8s+, J8s+, T8s+, A5o+, KTo+, QJo",
-       CO:"22+, A2s+, K3s+, Q6s+, J7s+, T7s+, 97s+, 87s, A2o+, K9o+, QTo+, JTo",
-       BTN:"22+, A2s+, K2s+, Q3s+, J5s+, T6s+, 96s+, 86s+, 75s+, 65s, A2o+, K5o+, Q8o+, J8o+, T8o+, 98o",
-       SB:"22+, A2s+, K2s+, Q2s+, J2s+, T4s+, 95s+, 85s+, 74s+, 64s+, 54s, A2o+, K2o+, Q6o+, J7o+, T7o+, 97o+, 87o"}}
+const findTok=(str,h)=>(str||"").split(",").map(t=>t.trim()).find(t=>parse(t).has(h));
+
+/* ---------- seats & formats ---------- */
+const FMT={
+  6:{seats:["UTG","MP","CO","BTN","SB","BB"],ang:{BTN:60,SB:120,BB:180,UTG:240,MP:300,CO:0}},
+  9:{seats:["UTG","UTG1","MP","LJ","HJ","CO","BTN","SB","BB"],ang:{BTN:60,SB:100,BB:140,UTG:180,UTG1:220,MP:260,LJ:300,HJ:340,CO:20}}
 };
-let depth=100;
-try{const d=+localStorage.getItem("sh-depth");if(DEPTHS[d])depth=d}catch(e){}
+for(const f in FMT)FMT[f].open=FMT[f].seats.filter(p=>p!=="BB");
+const disp=p=>p==="UTG1"?"UTG+1":p;
+const INFO={
+  UTG:{en:"Under the Gun",ru:"«Под прицелом»",desc:"Сидит слева от большого блайнда и первым принимает решение до флопа. Позади больше всего игроков, поэтому играем самый узкий диапазон."},
+  UTG1:{en:"Under the Gun +1",ru:"UTG+1, второе раннее место",desc:"Сразу после UTG. Позади ещё семеро, играем почти так же узко."},
+  MP6:{en:"Middle Position",ru:"Средняя позиция",desc:"Второй по очереди. В некоторых таблицах 6-max это место называют HJ (hijack, «угонщик»)."},
+  MP9:{en:"Middle Position",ru:"Средняя позиция",desc:"Третье место после блайндов. За столом на девятерых это всё ещё ранняя позиция: позади шестеро."},
+  LJ:{en:"Lojack",ru:"Лоджек",desc:"За три места до баттона. Диапазон примерно как с UTG за столом на шестерых."},
+  HJ:{en:"Hijack",ru:"Хайджек, «угонщик»",desc:"За два места до баттона. Диапазон примерно как с MP за столом на шестерых."},
+  CO:{en:"Cutoff",ru:"Катофф, «отсекающий»",desc:"Сидит справа от баттона. Рейз отсюда часто «отсекает» баттон, и тогда после флопа последнее слово у вас."},
+  BTN:{en:"Button",ru:"Баттон, место дилера",desc:"Здесь лежит фишка дилера D. После флопа вы ходите последним на всех улицах, это лучшее место за столом."},
+  SB:{en:"Small Blind",ru:"Малый блайнд",desc:"Обязательная ставка 0,5 бб вслепую. До флопа говорит предпоследним, после флопа первым, то есть без позиции."},
+  BB:{en:"Big Blind",ru:"Большой блайнд",desc:"Обязательная ставка 1 бб вслепую. До флопа говорит последним. Если до него все сбросили, просто забирает блайнды. Против рейза защищается: смотрите ситуацию «Защита большого блайнда»."}
+};
+const info=(f,p)=>INFO[p==="MP"?"MP"+f:p];
+const shortRu=(f,p)=>info(f,p).ru.split(",")[0].replace(/[«»]/g,"");
+const preOrd=(f,p)=>FMT[f].seats.indexOf(p)+1;
+const postOrd=(f,p)=>p==="SB"?1:p==="BB"?2:FMT[f].seats.indexOf(p)+3;
+
+/* ---------- opening ranges: RANGES[fmt][depth][pos] ---------- */
+const R6={
+  100:{UTG:"22+, A2s+, K9s+, QTs+, JTs, T9s, AJo+, KQo",
+       MP:"22+, A2s+, K8s+, Q9s+, J9s+, T9s, 98s, 87s, ATo+, KJo+, QJo",
+       CO:"22+, A2s+, K5s+, Q8s+, J8s+, T8s+, 97s+, 87s, 76s, 65s, A8o+, KTo+, QTo+, JTo",
+       BTN:"22+, A2s+, K2s+, Q4s+, J6s+, T6s+, 96s+, 85s+, 75s+, 64s+, 54s, A2o+, K8o+, Q9o+, J9o+, T8o+, 98o",
+       SB:"22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 97s+, 86s+, 75s+, 65s, 54s, A2o+, K9o+, Q9o+, J9o+, T9o"},
+  40:{UTG:"33+, A2s+, K9s+, QTs+, JTs, T9s, ATo+, KJo+",
+      MP:"22+, A2s+, K8s+, Q9s+, J9s+, T9s, 98s, A9o+, KTo+, QJo",
+      CO:"22+, A2s+, K5s+, Q8s+, J8s+, T8s+, 98s, 87s, A7o+, KTo+, QTo+, JTo",
+      BTN:"22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 97s+, 86s+, 76s, 65s, A2o+, K7o+, Q9o+, J9o+, T9o",
+      SB:"22+, A2s+, K2s+, Q4s+, J7s+, T7s+, 97s+, 87s, 76s, A2o+, K7o+, Q8o+, J9o+, T9o"},
+  20:{UTG:"55+, A7s+, A5s, KTs+, QTs+, JTs, ATo+, KQo",
+      MP:"44+, A4s+, K9s+, QTs+, JTs, A9o+, KJo+",
+      CO:"22+, A2s+, K7s+, Q9s+, J9s+, T9s, A7o+, KTo+, QJo",
+      BTN:"22+, A2s+, K4s+, Q7s+, J8s+, T8s+, 98s, A2o+, K8o+, Q9o+, J9o+, T9o",
+      SB:"22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 97s+, 87s, A2o+, K6o+, Q8o+, J8o+, T8o+, 98o"},
+  10:{UTG:"22+, A2s+, K8s+, Q9s+, J9s+, T9s, A8o+, KJo+",
+      MP:"22+, A2s+, K6s+, Q8s+, J8s+, T8s+, A5o+, KTo+, QJo",
+      CO:"22+, A2s+, K3s+, Q6s+, J7s+, T7s+, 97s+, 87s, A2o+, K9o+, QTo+, JTo",
+      BTN:"22+, A2s+, K2s+, Q3s+, J5s+, T6s+, 96s+, 86s+, 75s+, 65s, A2o+, K5o+, Q8o+, J8o+, T8o+, 98o",
+      SB:"22+, A2s+, K2s+, Q2s+, J2s+, T4s+, 95s+, 85s+, 74s+, 64s+, 54s, A2o+, K2o+, Q6o+, J7o+, T7o+, 97o+, 87o"}
+};
+const EARLY9={
+  100:{UTG:"44+, A9s+, A5s, KTs+, QTs+, JTs, T9s, AJo+, KQo",UTG1:"33+, A8s+, A5s, A4s, KTs+, QTs+, JTs, T9s, AJo+, KQo",MP:"22+, A7s+, A5s, A4s, A3s, K9s+, QTs+, JTs, T9s, 98s, ATo+, KQo"},
+  40:{UTG:"55+, ATs+, A5s, KJs+, QJs, JTs, AQo+",UTG1:"44+, A9s+, A5s, KTs+, QTs+, JTs, AJo+, KQo",MP:"33+, A7s+, A5s, A4s, KTs+, QTs+, JTs, T9s, AJo+, KQo"},
+  20:{UTG:"77+, ATs+, KQs, AQo+",UTG1:"66+, A9s+, KJs+, QJs, AJo+, KQo",MP:"55+, A8s+, A5s, KTs+, QJs, ATo+, KQo"},
+  10:{UTG:"55+, A7s+, A5s, KTs+, QJs, ATo+, KQo",UTG1:"44+, A5s+, K9s+, QTs+, JTs, A9o+, KJo+",MP:"33+, A3s+, K9s+, Q9s+, J9s+, T9s, A8o+, KJo+, QJo"}
+};
+const RANGES={6:R6,9:{}};
+for(const d in R6){const r=R6[d];RANGES[9][d]={...EARLY9[d],LJ:r.UTG,HJ:r.MP,CO:r.CO,BTN:r.BTN,SB:r.SB}}
+const SETS={};
+const openSet=(f,d,p)=>{const k=f+"|"+d+"|"+p;return SETS[k]||(SETS[k]=parse(RANGES[f][d][p]))};
+
+const DEPTH_NOTE={
+  100:"Кеш или начало турнира. Опен-рейз 2,5–3 бб. Мелкие пары и одномастные коннекторы ценны: если попадут, можно выиграть большой стек.",
+  40:"Середина турнира. Рейз 2–2,3 бб. Спекулятивные руки с ранних мест уходят, растёт вес тузов и бродвеев.",
+  20:"Короткий стек. Минрейз 2 бб или сразу олл-ин. После флопа играть почти некогда, решают старшие карты.",
+  10:"Пуш-фолд: только олл-ин или фолд. Диапазоны близки к расчётным таблицам (Нэш) для турнира с анте."
+};
+
+/* ---------- facing a raise (100 bb, 6-max) ---------- */
+const FACING={
+  ip_ep:{short:"vs ранний",title:"В позиции против раннего рейза",rep:["UTG","BTN"],
+    desc:"Открылся ранний игрок (UTG или MP), вы позади него и будете ходить после него на флопе. Его диапазон сильный, поэтому 3-бет только премиум плюс немного блефа с A5s и A4s. Колл — руки, которые хорошо играют в позиции.",
+    t3:"QQ+, AKs, AKo, A5s, A4s",call:"22-JJ, ATs-AQs, KJs+, QJs, JTs, T9s, 98s, AQo"},
+  ip_lp:{short:"BTN vs CO",title:"Баттон против рейза катоффа",rep:["CO","BTN"],
+    desc:"Открылся CO, вы на баттоне. Его диапазон широкий, поэтому 3-бет шире, а коллом играем пары, одномастные бродвеи и коннекторы.",
+    t3:"TT+, AQs+, A5s, A4s, A3s, KQs, AKo, AQo",call:"22-99, A9s-AJs, KTs-KJs, QTs+, JTs, T9s, 98s, 87s, 76s, AJo, KQo"},
+  sb_ep:{short:"SB vs ранний",title:"Малый блайнд против раннего рейза",rep:["UTG","SB"],
+    desc:"Вы на SB, открылся ранний игрок. Без позиции и с BB позади колл плох. Стратегия: 3-бет премиумом или фолд.",
+    t3:"JJ+, AQs+, AKo, A5s",call:""},
+  sb_lp:{short:"SB vs поздний",title:"Малый блайнд против CO или BTN",rep:["BTN","SB"],
+    desc:"Вы на SB, открылся CO или баттон. Стратегия «3-бет или фолд», но 3-бет заметно шире: соперник часто открывается слабым.",
+    t3:"88+, A9s+, A5s, A4s, KTs+, QTs+, JTs, T9s, AJo+, KQo",call:""},
+  bb_ep:{short:"BB vs ранний",title:"Большой блайнд против раннего рейза",rep:["UTG","BB"],
+    desc:"Вы на BB, открылся UTG или MP. 1 бб уже вложен, колл дешёвый, но диапазон соперника сильный, поэтому защищаемся умеренно.",
+    t3:"QQ+, AKs, AKo, A5s",call:"22-JJ, A2s-AQs, K9s+, QTs+, J9s+, T9s, 98s, 87s, 76s, 65s, ATo+, KJo+, QJo"},
+  bb_lp:{short:"BB vs поздний",title:"Большой блайнд против CO или BTN",rep:["BTN","BB"],
+    desc:"Вы на BB, открылся CO или баттон. Колл стоит всего 1,5 бб, а диапазон соперника широкий, поэтому защищаемся очень широко.",
+    t3:"TT+, AJs+, A5s, A4s, KQs, AQo+",call:"22-99, A2s-ATs, K2s-KJs, Q5s+, J7s+, T7s+, 96s+, 86s+, 75s+, 64s+, 54s, A2o-AJo, K8o+, Q9o+, J9o+, T9o, 98o"},
+  bb_sb:{short:"BB vs SB",title:"Большой блайнд против рейза малого блайнда",rep:["SB","BB"],
+    desc:"Вы на BB, рейзит SB (3 бб). После флопа вы ходите последним, поэтому защищаемся шире всего.",
+    t3:"99+, ATs+, A5s, A4s, KJs+, AJo+, KQo",call:"22-88, A2s-A9s, K2s-KTs, Q4s+, J6s+, T6s+, 96s+, 85s+, 75s+, 64s+, 54s, A2o-ATo, K5o-KJo, Q8o+, J8o+, T8o+, 98o"}
+};
+for(const k in FACING){const S=FACING[k];S.t3s=parse(S.t3);S.cs=parse(S.call);S.t3s.forEach(h=>S.cs.delete(h))}
+const facingCls=sc=>h=>FACING[sc].t3s.has(h)?"3":FACING[sc].cs.has(h)?"C":"F";
+function scenarioOf(opener,hero){
+  const ep=opener==="UTG"||opener==="MP";
+  if(hero==="BB")return opener==="SB"?"bb_sb":ep?"bb_ep":"bb_lp";
+  if(hero==="SB")return ep?"sb_ep":"sb_lp";
+  return ep?"ip_ep":"ip_lp";
+}
+const VS_PAIRS=[];{const s=FMT[6].seats;for(let i=0;i<s.length-1;i++)for(let j=i+1;j<s.length;j++)VS_PAIRS.push([s[i],s[j]])}
+
+/* ---------- settings & stats ---------- */
+let depth=100,fmt=6;
+try{const d=+localStorage.getItem("sh-depth");if(R6[d])depth=d;const f=+localStorage.getItem("sh-fmt");if(FMT[f])fmt=f}catch(e){}
 const isPush=()=>depth===10;
-const pk=p=>depth===100?p:depth+p;
-function applyDepth(d){depth=d;try{localStorage.setItem("sh-depth",d)}catch(e){}
-  for(const p of ORDER){POS[p].range=DEPTHS[d].r[p];POS[p].set=parse(POS[p].range)}}
-applyDepth(depth);
-function depthCtl(el){el.innerHTML=[100,40,20,10].map(d=>`<button id="${el.id}-${d}" data-d="${d}" aria-pressed="${d===depth}">${d} бб</button>`).join("");
-  el.onclick=e=>{const b=e.target.closest("[data-d]");if(!b)return;applyDepth(+b.dataset.d);syncDepthUI();renderChart();renderStats();deal()}}
-function syncDepthUI(){
-  document.querySelectorAll(".depth button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.d===depth));
-  document.querySelectorAll(".depthnote").forEach(n=>n.textContent=DEPTHS[depth].note);
-  document.getElementById("bRaise").textContent=isPush()?"ОЛЛ-ИН":"РЕЙЗ";
-  document.getElementById("legRaise").textContent=isPush()?"Олл-ин":"Рейз";
+const GOAL=20;
+let stats={};
+try{stats=JSON.parse(localStorage.getItem("sh-stats")||"{}")||{}}catch(e){stats={}}
+function normStats(){
+  stats.n=stats.n||0;stats.ok=stats.ok||0;stats.streak=stats.streak||0;stats.best=stats.best||0;
+  stats.pos=stats.pos||{};stats.mist=stats.mist||{};stats.days=stats.days||{};
+  stats.board=stats.board||{n:0,ok:0,streak:0,best:0};
 }
-const combos=h=>h.length===2?6:h[2]==="s"?4:12;
-const pctOf=set=>{let c=0;set.forEach(h=>c+=combos(h));return (c/1326*100).toFixed(1)};
-const ALL=[];for(let i=0;i<13;i++)for(let j=0;j<13;j++)ALL.push({h:handAt(i,j),i,j});
-
-function drawGrid(el,p,hl){
-  el.innerHTML="";const set=POS[p].set;
-  ALL.forEach(({h,i,j})=>{
-    const d=document.createElement("div");
-    d.className="cell"+(set.has(h)?" r":"")+(i===j?" pair":"")+(h===hl?" hl":"");
-    d.textContent=h;d.title=h;el.appendChild(d);
-  });
+normStats();
+const fx=ok=>{try{window.__fx&&window.__fx(ok)}catch(e){}};
+const save=()=>{const j=JSON.stringify(stats);try{localStorage.setItem("sh-stats",j)}catch(e){}try{window.__save&&window.__save(j)}catch(e){}};
+function recordDay(ok){
+  const k=dayKey(),d=stats.days[k]||(stats.days[k]={n:0,ok:0});d.n++;if(ok)d.ok++;
+  const keys=Object.keys(stats.days).sort();while(keys.length>60)delete stats.days[keys.shift()];
 }
 
-/* seats */
-const SEAT={
-  UTG:{en:"Under the Gun",ru:"«Под прицелом»",pre:1,post:3,desc:"Сидит слева от большого блайнда и первым принимает решение до флопа. За вами ещё пятеро игроков, поэтому играем самый узкий диапазон."},
-  MP:{en:"Middle Position",ru:"Средняя позиция",pre:2,post:4,desc:"Второй по очереди. В некоторых таблицах 6-max это место называют HJ (hijack, «угонщик»)."},
-  CO:{en:"Cutoff",ru:"Катофф, «отсекающий»",pre:3,post:5,desc:"Сидит справа от баттона. Рейз отсюда часто «отсекает» баттон, и тогда после флопа последнее слово у вас."},
-  BTN:{en:"Button",ru:"Баттон, место дилера",pre:4,post:6,desc:"Здесь лежит фишка дилера D. После флопа вы ходите последним на всех улицах, это лучшее место за столом."},
-  SB:{en:"Small Blind",ru:"Малый блайнд",pre:5,post:1,desc:"Обязательная ставка 0,5 бб вслепую, ещё до раздачи. До флопа говорит предпоследним, а после флопа первым, то есть без позиции."},
-  BB:{en:"Big Blind",ru:"Большой блайнд",pre:6,post:2,desc:"Обязательная ставка 1 бб вслепую. До флопа говорит последним. Если до него все сбросили, просто забирает блайнды, поэтому своей таблицы открытия у BB нет."}
-};
-const SEAT_ORDER=["UTG","MP","CO","BTN","SB","BB"];
-const SEAT_ANG={BTN:60,SB:120,BB:180,UTG:240,MP:300,CO:0};
-function tableSVG(sel,{felt=false,folded=[],click=false}={}){
-  const cx=180,cy=118,rx=128,ry=70,pt=(a,fx,fy)=>[cx+fx*Math.cos(a*Math.PI/180),cy+fy*Math.sin(a*Math.PI/180)];
-  let s=`<svg class="tbl${felt?" onfelt small":""}" viewBox="0 0 360 236" role="img" aria-label="Схема стола, ваше место ${sel}">`;
+/* ---------- table diagram ---------- */
+function tableSVG(f,sel,{felt=false,folded=[],click=false,raiser=null}={}){
+  const F=FMT[f],r=f===9?20:23,cx=180,cy=118,rx=f===9?122:128,ry=f===9?66:70;
+  const pt=(a,fx,fy)=>[cx+fx*Math.cos(a*Math.PI/180),cy+fy*Math.sin(a*Math.PI/180)];
+  let s=`<svg class="tbl${felt?" onfelt small":""}${f===9?" n9":""}" viewBox="0 0 360 236" role="img" aria-label="Схема стола, ваше место ${disp(sel)}">`;
   s+=`<ellipse class="tab" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>`;
-  s+=`<text class="mid" x="${cx}" y="${cy+3}">${felt?"":"ХОД ДО ФЛОПА ПО ЧАСОВОЙ ↻"}</text>`;
-  const [dx,dy]=pt(SEAT_ANG.BTN,rx*.72,ry*.66);
+  if(!felt)s+=`<text class="mid" x="${cx}" y="${cy+3}">ХОД ДО ФЛОПА ПО ЧАСОВОЙ ↻</text>`;
+  const [dx,dy]=pt(F.ang.BTN,rx*.72,ry*.66);
   s+=`<circle class="chip" cx="${dx}" cy="${dy}" r="9"/><text class="chip-t" x="${dx}" y="${dy+3}">D</text>`;
-  [["SB","0,5 бб"],["BB","1 бб"]].forEach(([p,t])=>{const [x,y]=pt(SEAT_ANG[p],rx*.68,ry*.6);s+=`<text class="blind" x="${x}" y="${y+3}">${t}</text>`});
-  SEAT_ORDER.forEach(p=>{
-    const [x,y]=pt(SEAT_ANG[p],rx+26,ry+24),f=folded.includes(p);
-    s+=`<g class="${p===sel?"sel ":""}${f?"fold ":""}${click?"click":""}" data-seat="${p}" ${click?`tabindex="0" role="button" aria-label="${p}, ${SEAT[p].ru}"`:""}>
-      <circle class="st-c" cx="${x}" cy="${y}" r="23"/>
-      <text class="st-t" x="${x}" y="${y+1}">${p}</text>
-      <text class="st-n" x="${x}" y="${y+12}">${f?"фолд":p===sel&&felt?"вы":SEAT[p].pre+"-й"}</text></g>`;
+  [["SB","0,5 бб"],["BB","1 бб"]].forEach(([p,t])=>{const [x,y]=pt(F.ang[p],rx*.66,ry*.58);s+=`<text class="blind" x="${x}" y="${y+3}">${t}</text>`});
+  F.seats.forEach(p=>{
+    const [x,y]=pt(F.ang[p],rx+r+3,ry+r+1),fo=folded.includes(p),rz=p===raiser;
+    const sub=rz?"рейз":fo?"фолд":p===sel&&felt?"вы":preOrd(f,p)+"-й";
+    s+=`<g class="${p===sel?"sel ":""}${fo?"fold ":""}${rz?"rz ":""}${click?"click":""}" data-seat="${p}" ${click?`tabindex="0" role="button" aria-label="${disp(p)}, ${info(f,p).ru}"`:""}>
+      <circle class="st-c" cx="${x}" cy="${y}" r="${r}"/>
+      <text class="st-t" x="${x}" y="${y+1}">${disp(p)}</text>
+      <text class="st-n" x="${x}" y="${y+11}">${sub}</text></g>`;
   });
   return s+"</svg>";
 }
 
-/* chart tab */
-let cur="CO";
-const posBtns=document.getElementById("posBtns");
-SEAT_ORDER.forEach(p=>{const b=document.createElement("button");b.textContent=p;b.id="pos-"+p;b.onclick=()=>{cur=p;renderChart()};posBtns.appendChild(b)});
-ORDER.forEach(p=>document.getElementById("quizPos").insertAdjacentHTML("beforeend",`<option value="${p}">${p} · ${SEAT[p].ru.replace(/«|»/g,"")}</option>`));
-const tc=document.getElementById("tableChart");
-tc.addEventListener("click",e=>{const g=e.target.closest("[data-seat]");if(g){cur=g.dataset.seat;renderChart()}});
-tc.addEventListener("keydown",e=>{const g=e.target.closest("[data-seat]");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();cur=g.dataset.seat;renderChart();tc.querySelector(`[data-seat="${cur}"]`).focus()}});
-function renderChart(){
-  posBtns.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.textContent===cur));
-  tc.innerHTML=tableSVG(cur,{click:true});
-  const S=SEAT[cur];
-  document.getElementById("seatInfo").innerHTML=`<span class="ab">${cur} = ${S.en}</span><span class="ttl">${S.ru}</span>
-    <div class="ord"><span>До флопа ходит <b>${S.pre}-м</b> из 6</span><span>После флопа <b>${S.post}-м</b> из 6</span></div>
-    <p class="note" style="color:var(--fg)">${S.desc}</p>`;
-  document.getElementById("rangeBlock").hidden=cur==="BB";
-  if(cur==="BB")return;
-  const P=POS[cur];
-  document.getElementById("posName").textContent=P.name;
-  document.getElementById("posPct").textContent=`${depth} бб · ${pctOf(P.set)}% рук · ${P.set.size} из 169`;
-  document.getElementById("posDesc").textContent=P.desc;
-  document.getElementById("posRange").textContent=P.range;
-  drawGrid(document.getElementById("grid"),cur);
+/* ---------- grid ---------- */
+function drawGrid(el,cls,hl){
+  el.innerHTML=ALL.map(({h,i,j})=>{const c=cls(h);
+    return `<div class="cell${c==="R"||c==="C"?" r":c==="3"?" t":""}${i===j?" pair":""}${h===hl?" hl":""}" title="${h}">${h}</div>`}).join("");
 }
-renderChart();
+function legendHTML(kind){
+  if(kind==="open")return `<span><i style="background:var(--raise)"></i>${isPush()?"Олл-ин":"Рейз"}</span><span><i style="background:var(--fold)"></i>Фолд</span><span>Выше диагонали — одномастные (s), ниже — разномастные (o)</span>`;
+  return `<span><i style="background:var(--brass)"></i>3-бет</span><span><i style="background:var(--raise)"></i>Колл</span><span><i style="background:var(--fold)"></i>Фолд</span>`;
+}
 
-/* ranks tab */
+/* ---------- segmented controls (format, depth) ---------- */
+function segs(){
+  document.querySelectorAll(".fmt").forEach(el=>el.innerHTML=[6,9].map(f=>`<button data-f="${f}" aria-pressed="${f===fmt}">${f}-max</button>`).join(""));
+  document.querySelectorAll(".depth").forEach(el=>el.innerHTML=[100,40,20,10].map(d=>`<button data-d="${d}" aria-pressed="${d===depth}">${d} бб</button>`).join(""));
+}
+document.addEventListener("click",e=>{
+  const f=e.target.closest(".fmt [data-f]"),d=e.target.closest(".depth [data-d]");
+  if(!f&&!d)return;
+  if(f){fmt=+f.dataset.f;try{localStorage.setItem("sh-fmt",fmt)}catch(e){}if(!FMT[fmt].seats.includes(cur))cur="CO";fillPosSelect()}
+  if(d){depth=+d.dataset.d;try{localStorage.setItem("sh-depth",depth)}catch(e){}}
+  segs();renderChart();renderStats();deal();
+});
+
+/* ---------- chart tab ---------- */
+let cur="CO",cSit="open";
+$("cSit").innerHTML=`<option value="open">Первый вход по позициям</option>`+Object.keys(FACING).map(k=>`<option value="${k}">${FACING[k].title}</option>`).join("");
+const tc=$("tableChart");
+tc.addEventListener("click",e=>{const g=e.target.closest("[data-seat]");if(g){cur=g.dataset.seat;cSit="open";$("cSit").value="open";renderChart()}});
+tc.addEventListener("keydown",e=>{const g=e.target.closest("[data-seat]");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();cur=g.dataset.seat;cSit="open";$("cSit").value="open";renderChart();const n=tc.querySelector(`[data-seat="${cur}"]`);n&&n.focus()}});
+$("cSit").onchange=e=>{cSit=e.target.value;renderChart()};
+$("posBtns").onclick=e=>{const b=e.target.closest("[data-p]");if(b){cur=b.dataset.p;renderChart()}};
+function renderChart(){
+  const open=cSit==="open";
+  document.querySelectorAll(".openC").forEach(el=>el.hidden=!open);
+  if(open){
+    const f=fmt;
+    $("cNote").textContent=`${f===9?"Девять":"Шесть"} мест за столом ${f}-max. Нажмите на место, чтобы увидеть расшифровку и его таблицу. Чем позже вы ходите, тем больше знаете о соперниках, поэтому с поздних мест открываем больше рук. ${DEPTH_NOTE[depth]}`;
+    tc.innerHTML=tableSVG(f,cur,{click:true});
+    $("posBtns").innerHTML=FMT[f].seats.map(p=>`<button data-p="${p}" aria-pressed="${p===cur}">${disp(p)}</button>`).join("");
+    const S=info(f,cur),n=FMT[f].seats.length;
+    $("seatInfo").innerHTML=`<span class="ab">${disp(cur)} = ${S.en}</span><span class="ttl">${S.ru}</span>
+      <div class="ord"><span>До флопа ходит <b>${preOrd(f,cur)}-м</b> из ${n}</span><span>После флопа <b>${postOrd(f,cur)}-м</b> из ${n}</span></div>
+      <p class="note" style="color:var(--fg)">${S.desc}</p>`;
+    $("rangeBlock").hidden=cur==="BB";
+    if(cur==="BB")return;
+    const set=openSet(f,depth,cur);
+    $("posName").textContent=`${disp(cur)} · ${isPush()?"олл-ин":"открытие"}`;
+    $("posPct").textContent=`${f}-max · ${depth} бб · ${pctOf(set)}% рук`;
+    $("posRange").textContent=RANGES[f][depth][cur];
+    drawGrid($("grid"),h=>set.has(h)?"R":"F");
+    $("cLegend").innerHTML=legendHTML("open");
+  }else{
+    const S=FACING[cSit],[op,hero]=S.rep;
+    $("cNote").textContent="Стол 6-max, стеки 100 бб, открытие 2,5 бб (SB — 3 бб).";
+    tc.innerHTML=tableSVG(6,hero,{raiser:op,folded:FMT[6].seats.filter(p=>preOrd(6,p)<preOrd(6,hero)&&p!==op)});
+    $("seatInfo").innerHTML=`<span class="ab">${S.short.toUpperCase()}</span><span class="ttl">${S.title}</span><p class="note" style="color:var(--fg)">${S.desc}</p>`;
+    $("rangeBlock").hidden=false;
+    $("posName").textContent=S.short;
+    $("posPct").textContent=`3-бет ${pctOf(S.t3s)}% · колл ${pctOf(S.cs)}%`;
+    $("posRange").textContent=`3-бет: ${S.t3}${S.call?" · Колл: "+S.call:" · Колл: нет, только 3-бет или фолд"}`;
+    drawGrid($("grid"),facingCls(cSit));
+    $("cLegend").innerHTML=legendHTML("vs");
+  }
+}
+
+/* ---------- ranks tab ---------- */
 const RANKS=[
   ["Роял-флеш","Туз, король, дама, валет, десятка одной масти",["A♠","K♠","Q♠","J♠","T♠"]],
   ["Стрит-флеш","Пять карт подряд одной масти",["9♥","8♥","7♥","6♥","5♥"]],
@@ -395,84 +561,181 @@ const RANKS=[
   ["Старшая карта","Ничего не собрано, решает старшая",["A♠","Q♥","9♦","6♣","3♠"]]
 ];
 const DIM={6:[4],7:[3,4],8:[4],9:[2,3,4],10:[1,2,3,4]};
-document.getElementById("rankList").innerHTML=RANKS.map(([n,d,c],k)=>
+$("rankList").innerHTML=RANKS.map(([n,d,c],k)=>
   `<li><span class="n">${String(k+1).padStart(2,"0")}</span><div><div class="nm">${n}</div><div class="d">${d}</div></div>
    <div class="mini">${c.map((x,ci)=>`<span class="${/[♥♦]/.test(x)?"red":""} ${(DIM[k+1]||[]).includes(ci)?"dim":""}">${x[0]==="T"?"10":x[0]}<br>${x[1]}</span>`).join("")}</div></li>`).join("");
 
-/* tabs */
+/* ---------- tabs ---------- */
 document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
-  ["quiz","board","chart","ranks"].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);
+  ["quiz","board","chart","ranks"].forEach(id=>$(id).hidden=id!==b.dataset.tab);
+  if(b.dataset.tab!=="quiz")stopTimer();
 });
 
-/* quiz */
-const SUITS=["♠","♥","♦","♣"];
-let stats={n:0,ok:0,streak:0,best:0,pos:{}};
-try{const s=JSON.parse(localStorage.getItem("sh-stats")||"null");if(s&&s.pos)stats=s}catch(e){}
-const save=()=>{const j=JSON.stringify(stats);try{localStorage.setItem("sh-stats",j)}catch(e){}try{if(cloudOK)tg.CloudStorage.setItem("sh-stats",j)}catch(e){}};
-let q=null,answered=false;
-
-function isEdge(p,{i,j}){
-  const set=POS[p].set,inR=set.has(handAt(i,j));
-  return [[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>{const x=i+a,y=j+b;return x>=0&&x<13&&y>=0&&y<13&&set.has(handAt(x,y))!==inR});
+/* ---------- quiz ---------- */
+let q=null,answered=false,timerId=null;
+function fillPosSelect(){
+  const sel=$("quizPos"),prev=sel.value;
+  sel.innerHTML=`<option value="ALL">Все позиции</option>`+FMT[fmt].open.map(p=>`<option value="${p}">${disp(p)} · ${shortRu(fmt,p)}</option>`).join("");
+  sel.value=FMT[fmt].open.includes(prev)?prev:"ALL";
 }
+function openKey(f,d,p){return `o|${f}|${d}|${p}`}
+function makeQ(kind,a,b,h){
+  if(kind==="o"){const [f,d,p]=a,set=openSet(f,d,p);
+    return{kind:"o",f,d,hero:p,h,key:openKey(f,d,p),sk:`${f}|${d}|${p}`,cls:x=>set.has(x)?"R":"F"};}
+  const sc=scenarioOf(a,b);
+  return{kind:"v",f:6,d:100,opener:a,hero:b,sc,h,key:`v|${a}|${b}`,sk:"v:"+sc,cls:facingCls(sc)};
+}
+function sitAllows(sit,k){
+  if(k.startsWith("o|"))return sit==="open"||sit==="mix";
+  const hero=k.split("|")[2];
+  return sit==="mix"||(sit==="vs"&&hero!=="BB")||(sit==="bb"&&hero==="BB");
+}
+function mistCandidates(){
+  const sit=$("qSit").value,pp=$("quizPos").value;
+  return Object.keys(stats.mist).filter(k=>{
+    if(!sitAllows(sit,k))return false;
+    if(k.startsWith("o|")){const [,f,d,p]=k.split("|");return +f===fmt&&+d===depth&&(pp==="ALL"||pp===p)}
+    return true;
+  });
+}
+function qFromMist(k){const parts=k.split("|"),h=parts.pop();
+  return parts[0]==="o"?makeQ("o",[+parts[1],+parts[2],parts[3]],null,h):makeQ("v",parts[1],parts[2],h)}
+function isEdgeCls(cls,{i,j}){const c=cls(handAt(i,j));
+  return [[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>{const x=i+a,y=j+b;return x>=0&&x<13&&y>=0&&y<13&&cls(handAt(x,y))!==c})}
 function pickWeighted(){const r=Math.random()*1326;let acc=0;for(const c of ALL){acc+=combos(c.h);if(acc>r)return c}return ALL[0]}
+function pickHand(cls){
+  if($("quizMode").value!=="any"&&Math.random()<0.65){const e=ALL.filter(x=>isEdgeCls(cls,x));if(e.length)return rnd(e).h}
+  return pickWeighted().h;
+}
+function newQ(){
+  const sit=$("qSit").value,mode=$("quizMode").value;
+  const mc=mistCandidates();
+  if(mode==="mist"){
+    if(!mc.length)return null;
+    const w=mc.map(k=>stats.mist[k]);let r=Math.random()*w.reduce((a,b)=>a+b,0);
+    for(let i=0;i<mc.length;i++){r-=w[i];if(r<=0)return qFromMist(mc[i])}
+    return qFromMist(mc[mc.length-1]);
+  }
+  if(mc.length&&Math.random()<0.3)return qFromMist(rnd(mc));
+  let kind=sit==="open"?"o":sit==="mix"?(Math.random()<0.5?"o":"v"):"v";
+  if(kind==="o"){
+    const pp=$("quizPos").value,p=pp==="ALL"||sit==="mix"?rnd(FMT[fmt].open):pp;
+    const base=makeQ("o",[fmt,depth,p],null,"");base.h=pickHand(base.cls);return base;
+  }
+  const pairs=VS_PAIRS.filter(([o,h])=>sit==="vs"?h!=="BB":sit==="bb"?h==="BB":true);
+  const [o,h]=rnd(pairs),base=makeQ("v",o,h,"");base.h=pickHand(base.cls);return base;
+}
+const ACT={F:["ФОЛД","b-fold"],C:["КОЛЛ","b-call"],"3":["3-БЕТ","b-raise"]};
+function setActions(kind){
+  const list=kind==="o"?[["F","ФОЛД","b-fold"],["R",isPush()?"ОЛЛ-ИН":"РЕЙЗ","b-raise"]]:[["F","ФОЛД","b-fold"],["C","КОЛЛ","b-call"],["3","3-БЕТ","b-raise"]];
+  const el=$("qActions");el.style.setProperty("--n",list.length);
+  el.innerHTML=list.map(([a,t,c])=>`<button class="${c}" data-a="${a}">${t}</button>`).join("");
+}
+$("qActions").onclick=e=>{const b=e.target.closest("[data-a]");if(b)answer(b.dataset.a)};
+const actName=(a,kind)=>a==="F"?"фолд":a==="C"?"колл":a==="3"?"3-бет":(q&&q.kind==="o"&&q.d===10)?"олл-ин":"рейз";
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}}
+function startTimer(){
+  stopTimer();const sec=+$("qTime").value;$("qTimer").hidden=!sec;if(!sec)return;
+  const t0=Date.now(),bar=$("qTimerBar");bar.style.width="100%";
+  timerId=setInterval(()=>{const left=1-(Date.now()-t0)/(sec*1000);bar.style.width=Math.max(0,left*100)+"%";
+    if(left<=0){stopTimer();answer(null)}},50);
+}
 function deal(){
-  const pp=document.getElementById("quizPos").value;
-  const p=pp==="ALL"?ORDER[Math.floor(Math.random()*5)]:pp;
-  let c;
-  if(document.getElementById("quizMode").value==="edge"&&Math.random()<0.65){
-    const e=ALL.filter(x=>isEdge(p,x));c=e[Math.floor(Math.random()*e.length)];
-  }else c=pickWeighted();
-  const h=c.h,s1=Math.floor(Math.random()*4);
-  let s2=s1;if(h.length===2||h[2]==="o"){do{s2=Math.floor(Math.random()*4)}while(s2===s1)}
-  q={p,h,cards:[[h[0],s1],[h[1],s2]]};answered=false;
-  document.getElementById("qPos").textContent=p;
-  document.getElementById("qStack").textContent=depth;
-  document.getElementById("qPosName").textContent=`${SEAT[p].en} · ${SEAT[p].ru}`;
-  document.getElementById("qTable").innerHTML=tableSVG(p,{felt:true,folded:SEAT_ORDER.filter(x=>SEAT[x].pre<SEAT[p].pre)});
-  document.getElementById("qHand").innerHTML=q.cards.map(([r,s])=>
-    `<div class="card ${s===1||s===2?"red":""}"><div class="rk">${r==="T"?"10":r}</div><div class="st">${SUITS[s]}</div></div>`).join("");
-  document.getElementById("qCode").textContent=h+(h.length===2?" · пара":h[2]==="s"?" · одномастные":" · разномастные");
-  document.getElementById("qFb").textContent=isPush()?"Олл-ин или фолд?":"Рейз или фолд?";
-  document.getElementById("bNext").hidden=true;
-  document.getElementById("bFold").disabled=document.getElementById("bRaise").disabled=false;
-  document.getElementById("quizGridWrap").hidden=true;
+  stopTimer();
+  const sit=$("qSit").value;
+  document.querySelectorAll("#quiz .openOnly").forEach(el=>el.hidden=sit!=="open");
+  $("qNote").textContent=sit==="open"?DEPTH_NOTE[depth]:sit==="mix"?"Вперемешку: первый вход за вашим столом и стеком плюс ответы на рейз (6-max, 100 бб).":FACING[sit==="bb"?"bb_lp":"ip_ep"]&&(sit==="bb"?"Вы на большом блайнде, кто-то открылся рейзом. 3-бет, колл или фолд? Стол 6-max, 100 бб.":"Перед вами кто-то открылся рейзом. 3-бет, колл или фолд? Стол 6-max, 100 бб.");
+  renderMistInfo();
+  q=newQ();answered=false;
+  $("quizGridWrap").hidden=true;$("bNext").hidden=true;
+  if(!q){
+    $("qTable").innerHTML="";$("qSeat").textContent="ОШИБОК НЕТ";$("qPosName").textContent="";$("qHand").innerHTML="";$("qCode").textContent="";
+    $("qActions").innerHTML="";$("qTimer").hidden=true;
+    $("qFb").textContent="В этой ситуации на повторе нет рук. Переключите «Руки» на другой режим и тренируйтесь: ошибки сами попадут сюда.";
+    renderStats();return;
+  }
+  const f=q.f,hero=q.hero;
+  if(q.kind==="o"){
+    $("qTable").innerHTML=tableSVG(f,hero,{felt:true,folded:FMT[f].seats.filter(x=>preOrd(f,x)<preOrd(f,hero))});
+    $("qSeat").innerHTML=`ВЫ НА <span>${disp(hero)}</span> · ${f}-MAX · ${q.d} ББ · ДО ВАС ФОЛД`;
+  }else{
+    $("qTable").innerHTML=tableSVG(6,hero,{felt:true,raiser:q.opener,folded:FMT[6].seats.filter(x=>preOrd(6,x)<preOrd(6,hero)&&x!==q.opener)});
+    $("qSeat").innerHTML=`ВЫ НА <span>${disp(hero)}</span> · ${disp(q.opener)} РЕЙЗ ${q.opener==="SB"?"3":"2,5"} ББ`;
+  }
+  $("qPosName").textContent=`${info(f,hero).en} · ${info(f,hero).ru}`;
+  const h=q.h,s1=Math.floor(Math.random()*4);let s2=s1;if(h.length===2||h[2]==="o"){do{s2=Math.floor(Math.random()*4)}while(s2===s1)}
+  $("qHand").innerHTML=[{r:h[0],s:s1},{r:h[1],s:s2}].map(c=>cardHTML(c,false)).join("");
+  $("qCode").textContent=h+(h.length===2?" · пара":h[2]==="s"?" · одномастные":" · разномастные")+(stats.mist[q.key+"|"+h]?" · повтор ошибки":"");
+  setActions(q.kind);
+  $("qFb").textContent=q.kind==="o"?(q.d===10?"Олл-ин или фолд?":"Рейз или фолд?"):"Фолд, колл или 3-бет?";
+  startTimer();renderStats();
 }
-function answer(raise){
-  if(answered||!q)return;answered=true;
-  const should=POS[q.p].set.has(q.h),ok=raise===should;haptic(ok);
+function answer(a){
+  if(answered||!q)return;answered=true;stopTimer();
+  const right=q.cls(q.h),ok=a===right;fx(ok);
   stats.n++;if(ok){stats.ok++;stats.streak++;stats.best=Math.max(stats.best,stats.streak)}else stats.streak=0;
-  const ps=stats.pos[pk(q.p)]||(stats.pos[pk(q.p)]={n:0,ok:0});ps.n++;if(ok)ps.ok++;save();
-  const tok=POS[q.p].range.split(", ").find(t=>parse(t).has(q.h));
-  document.getElementById("qFb").innerHTML=ok
-    ?`<strong class="ok">Верно.</strong> ${should?`${q.h} на ${q.p} при ${depth} бб ${isPush()?"пушим":"открываем"}: входит в ${tok}.`:`${q.h} на ${q.p} при ${depth} бб не ${isPush()?"пушим":"открываем"}.`}`
-    :`<strong class="no">Ошибка.</strong> ${should?`Правильно ${isPush()?"олл-ин":"рейз"}: при ${depth} бб ${q.h} входит в ${tok}.`:`Правильно фолд: при ${depth} бб ${q.h} слишком слабая для ${q.p}.`}`;
-  document.getElementById("bNext").hidden=false;
-  document.getElementById("bFold").disabled=document.getElementById("bRaise").disabled=true;
-  document.getElementById("quizGridLabel").textContent=`Таблица ${q.p} · ${depth} бб · ${pctOf(POS[q.p].set)}% рук`;
-  drawGrid(document.getElementById("quizGrid"),q.p,q.h);
-  document.getElementById("quizGridWrap").hidden=false;
-  renderStats();
+  const ps=stats.pos[q.sk]||(stats.pos[q.sk]={n:0,ok:0});ps.n++;if(ok)ps.ok++;
+  const mk=q.key+"|"+q.h;
+  if(!ok)stats.mist[mk]=3;else if(stats.mist[mk]){stats.mist[mk]--;if(stats.mist[mk]<=0)delete stats.mist[mk]}
+  recordDay(ok);save();
+  document.querySelectorAll("#qActions button").forEach(b=>{b.disabled=true;if(b.dataset.a===right)b.classList.add("right")});
+  let why;
+  if(q.kind==="o"){const tok=findTok(RANGES[q.f][q.d][q.hero],q.h);
+    why=right==="R"?`${q.h} на ${disp(q.hero)} (${q.f}-max, ${q.d} бб) ${q.d===10?"пушим":"открываем"}: входит в ${tok}.`:`${q.h} на ${disp(q.hero)} (${q.f}-max, ${q.d} бб) слишком слабая, фолд.`;}
+  else{const S=FACING[q.sc];
+    why=right==="3"?`Против рейза ${disp(q.opener)} с ${disp(q.hero)} делаем 3-бет: ${q.h} входит в ${findTok(S.t3,q.h)}.`
+      :right==="C"?`Против рейза ${disp(q.opener)} с ${disp(q.hero)} коллируем: ${q.h} входит в ${findTok(S.call,q.h)}.`
+      :`Против рейза ${disp(q.opener)} с ${disp(q.hero)} ${q.h} не играем${S.call?"":" (здесь только 3-бет или фолд)"}.`;}
+  const head=a===null?`<strong class="no">Время вышло.</strong> Правильно: ${actName(right)}.`:ok?`<strong class="ok">Верно.</strong>`:`<strong class="no">Ошибка.</strong> Правильно: ${actName(right)}.`;
+  $("qFb").innerHTML=`${head} ${why}${!ok?" Рука добавлена в повтор.":""}`;
+  $("bNext").hidden=false;
+  $("quizGridLabel").textContent=q.kind==="o"?`Таблица ${disp(q.hero)} · ${q.f}-max · ${q.d} бб · ${pctOf(openSet(q.f,q.d,q.hero))}% рук`:FACING[q.sc].title;
+  drawGrid($("quizGrid"),q.cls,q.h);
+  $("quizLegend").innerHTML=legendHTML(q.kind==="o"?"open":"vs");
+  $("quizGridWrap").hidden=false;
+  renderStats();renderProgress();
 }
+function renderMistInfo(){
+  const all=Object.keys(stats.mist).length,here=mistCandidates().length;
+  $("mistInfo").textContent=all?`На повторе ${all} ${plural(all,"рука","руки","рук")}, в этой ситуации ${here}. Ошибки попадаются чаще, пока не ответите верно несколько раз.`:"Ошибок на повторе нет.";
+}
+function plural(n,a,b,c){const m=n%10,h=n%100;return m===1&&h!==11?a:m>=2&&m<=4&&(h<12||h>14)?b:c}
 function renderStats(){
-  document.getElementById("sAcc").textContent=stats.n?Math.round(stats.ok/stats.n*100)+"%":"—";
-  document.getElementById("sStreak").textContent=stats.streak;
-  document.getElementById("sBest").textContent=stats.best;
-  document.getElementById("byPos").innerHTML=ORDER.map(p=>{const s=stats.pos[pk(p)];
-    return `<div>${p}<b>${s&&s.n?Math.round(s.ok/s.n*100)+"%":"—"}</b>${s?s.n:0} разд.</div>`}).join("");
+  $("sAcc").textContent=stats.n?Math.round(stats.ok/stats.n*100)+"%":"—";
+  $("sStreak").textContent=stats.streak;$("sBest").textContent=stats.best;
+  const sit=$("qSit").value,items=[];
+  if(sit==="open"||sit==="mix")FMT[fmt].open.forEach(p=>items.push([disp(p),`${fmt}|${depth}|${p}`]));
+  Object.keys(FACING).forEach(k=>{const bb=k.startsWith("bb");if(sit==="mix"||(sit==="vs"&&!bb)||(sit==="bb"&&bb))items.push([FACING[k].short,"v:"+k])});
+  $("byPos").innerHTML=items.map(([l,k])=>{const s=stats.pos[k];return `<div>${l}<b>${s&&s.n?Math.round(s.ok/s.n*100)+"%":"—"}</b>${s?s.n:0} разд.</div>`}).join("");
+  renderMistInfo();
 }
-document.getElementById("bFold").onclick=()=>answer(false);
-document.getElementById("bRaise").onclick=()=>answer(true);
-document.getElementById("bNext").onclick=deal;
-document.getElementById("quizPos").onchange=deal;
-document.getElementById("quizMode").onchange=deal;
-document.getElementById("bReset").onclick=()=>{stats={n:0,ok:0,streak:0,best:0,pos:{},board:stats.board};save();renderStats()};
-/* board mode */
+["qSit","quizPos","quizMode","qTime"].forEach(id=>$(id).onchange=()=>{renderStats();deal()});
+$("bNext").onclick=deal;
+$("bReset").onclick=()=>{stats.n=stats.ok=stats.streak=stats.best=0;stats.pos={};stats.mist={};save();renderStats();deal()};
+
+/* ---------- progress ---------- */
+function renderProgress(){
+  const days=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=dayKey(d);days.push({d,v:stats.days[k]||{n:0,ok:0},today:i===0})}
+  const t=days[13].v;$("gToday").textContent=t.n;$("gGoal").textContent=GOAL;$("gBar").style.width=Math.min(100,t.n/GOAL*100)+"%";
+  let st=0;for(let i=13;i>=0;i--){const n=days[i].v.n;if(n>=GOAL)st++;else if(i===13)continue;else break}
+  $("gStreak").textContent=st?`Цель выполнена ${st} ${plural(st,"день","дня","дней")} подряд`:"Выполните цель, чтобы начать серию дней";
+  const max=Math.max(GOAL*1.25,...days.map(x=>x.v.n)),top=22,bot=122,h=bot-top,bw=344/14;
+  const y=n=>bot-n/max*h;
+  let s=`<line class="pbase" x1="8" x2="352" y1="${bot}" y2="${bot}"/>`;
+  s+=`<line class="pgoal" x1="8" x2="352" y1="${y(GOAL)}" y2="${y(GOAL)}"/><text class="pgl" x="352" y="${y(GOAL)-4}" text-anchor="end">цель ${GOAL}</text>`;
+  days.forEach((x,i)=>{const cx=8+bw*i+bw/2,n=x.v.n,bh=n/max*h;
+    if(n)s+=`<rect class="pbar${x.today?" today":""}" x="${cx-bw/2+3}" y="${bot-bh}" width="${bw-6}" height="${bh}" rx="2"/><text class="ptx${x.today?" today":""}" x="${cx}" y="${bot-bh-4}">${Math.round(x.v.ok/n*100)}%</text>`;
+    s+=`<text class="ptx${x.today?" today":""}" x="${cx}" y="${bot+14}">${x.d.getDate()}</text>`;});
+  $("pChart").innerHTML=s;
+}
+
+/* ---------- board: evaluator ---------- */
 const V={A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2};
 const CAT=["Старшая карта","Пара","Две пары","Тройка","Стрит","Флеш","Фулл-хаус","Каре","Стрит-флеш","Роял-флеш"];
 const PL={14:"тузы",13:"короли",12:"дамы",11:"валеты",10:"десятки",9:"девятки",8:"восьмёрки",7:"семёрки",6:"шестёрки",5:"пятёрки",4:"четвёрки",3:"тройки",2:"двойки"};
 const SG={14:"туз",13:"король",12:"дама",11:"валет",10:"десятка",9:"девятка",8:"восьмёрка",7:"семёрка",6:"шестёрка",5:"пятёрка",4:"четвёрка",3:"тройка",2:"двойка"};
+const GEN={14:"туза",13:"короля",12:"дамы",11:"валета",10:"десятки",9:"девятки",8:"восьмёрки",7:"семёрки",6:"шестёрки",5:"пятёрки"};
 function eval5(cs){
   const vals=cs.map(c=>V[c.r]).sort((a,b)=>b-a);
   const flush=cs.every(c=>c.s===cs[0].s);
@@ -497,7 +760,6 @@ function best(cards){
     for(let i=st;i<n;i++){acc.push(cards[i]);pick(i+1,acc);acc.pop()}};
   pick(0,[]);return{score:bs,cards:bc};
 }
-const GEN={14:"туза",13:"короля",12:"дамы",11:"валета",10:"десятки",9:"девятки",8:"восьмёрки",7:"семёрки",6:"шестёрки",5:"пятёрки"};
 function describe(s){
   const [c,a,b]=s;
   switch(c){
@@ -514,18 +776,49 @@ function describe(s){
   }
 }
 const key=c=>c.r+c.s;
-const cardHTML=(c,sm)=>`<div class="card${sm?" sm":""} ${c.s===1||c.s===2?"red":""}" data-k="${key(c)}"><div class="rk">${c.r==="T"?"10":c.r}</div><div class="st">${SUITS[c.s]}</div></div>`;
+/* card faces: corner indices, classic pip layouts, own court design */
+const PIPS={2:[[50,0],[50,100]],3:[[50,0],[50,50],[50,100]],4:[[0,0],[100,0],[0,100],[100,100]],
+  5:[[0,0],[100,0],[50,50],[0,100],[100,100]],6:[[0,0],[100,0],[0,50],[100,50],[0,100],[100,100]],
+  7:[[0,0],[100,0],[50,25],[0,50],[100,50],[0,100],[100,100]],8:[[0,0],[100,0],[50,25],[0,50],[100,50],[50,75],[0,100],[100,100]],
+  9:[[0,0],[100,0],[0,33.3],[100,33.3],[50,50],[0,66.7],[100,66.7],[0,100],[100,100]],
+  10:[[0,0],[100,0],[50,16.7],[0,33.3],[100,33.3],[0,66.7],[100,66.7],[50,83.3],[0,100],[100,100]]};
+const COURT={J:"♞",Q:"♛",K:"♚"};
+function cardHTML(c,sm){
+  const su=SUITS[c.s],rk=c.r==="T"?"10":c.r,v=c.r==="A"?1:c.r==="T"?10:+c.r;
+  let mid;
+  if(c.r==="A")mid=`<div class="ace">${su}</div>`;
+  else if(COURT[c.r])mid=`<div class="court"><span class="g">${COURT[c.r]}</span><span class="s">${su}</span></div>`;
+  else mid=`<div class="face">${PIPS[v].map(([x,y])=>`<span class="pip${y>50?" flip":""}" style="left:${x}%;top:${y}%">${su}</span>`).join("")}</div>`;
+  return `<div class="card${sm?" sm":""}${c.s===1||c.s===2?" red":""}" data-k="${key(c)}" aria-label="${rk}${su}">`+
+    `<div class="idx tl">${rk}<i>${su}</i></div>${mid}<div class="idx br">${rk}<i>${su}</i></div></div>`;
+}
+const cardTxt=c=>`<span class="${c.s===1||c.s===2?"red":""}">${c.r==="T"?"10":c.r}${SUITS[c.s]}</span>`;
 function newDeck(){const d=[];for(const r of R)for(let s=0;s<4;s++)d.push({r,s});
   for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}return d}
 const W=[.3,.45,.9,1,1,1,1,1,1,1];
 const STREET={3:"ФЛОП",4:"ТЁРН",5:"РИВЕР"};
+const C2=n=>n*(n-1)/2;
 let bq=null,bAnswered=false;
-stats.board=stats.board||{n:0,ok:0,streak:0,best:0};
+
+function scoreBoard(ok){const s=stats.board;s.n++;if(ok){s.ok++;s.streak++;s.best=Math.max(s.best,s.streak)}else s.streak=0;fx(ok);recordDay(ok);save();renderBoardStats();renderProgress()}
+function boardChoices(opts,cls,handler){
+  const ch=$("bChoices");ch.className="choices"+(cls?" "+cls:"");
+  ch.innerHTML=opts.map((o,i)=>`<button data-i="${i}">${o}</button>`).join("");
+  ch.querySelectorAll("button").forEach(b=>b.onclick=()=>handler(+b.dataset.i));
+}
+function markChoices(right,picked){document.querySelectorAll("#bChoices button").forEach(b=>{b.disabled=true;const k=+b.dataset.i;if(k===right)b.classList.add("right");else if(k===picked)b.classList.add("wrong")})}
 
 function dealBoard(){
-  const mode=document.getElementById("bMode").value;
-  const sv=document.getElementById("bStreet").value;
-  document.getElementById("bStreet").hidden=document.getElementById("bStreetL").hidden=mode==="win";
+  const mode=$("bMode").value;
+  $("bStreet").hidden=$("bStreetL").hidden=mode==="win";
+  $("bStreet").querySelector('[value="5"]').hidden=mode==="outs";
+  if(mode==="outs"&&$("bStreet").value==="5")$("bStreet").value="rnd";
+  const sv=$("bStreet").value;
+  $("bPot").hidden=true;$("bOuts").hidden=true;$("bNextB").hidden=true;bAnswered=false;
+  $("bNote").textContent=mode==="outs"
+    ?"Аут — карта из колоды, которая сделает вам стрит или сильнее. Считаем только такие, пары не в счёт. Правило 2 и 4: на тёрне эквити ≈ ауты × 2, на флопе перед олл-ином ≈ ауты × 4. Колл выгоден, если эквити больше, чем ставка / (банк + 2 ставки)."
+    :"Комбинация всегда из лучших 5 карт: ваши 2 + общие. После ответа подсвечиваются карты, которые её составляют. Пробел — следующая раздача.";
+  if(mode==="outs")return dealOuts(sv);
   let d,hero,vill,board,hb,vb,n;
   for(let tries=0;tries<200;tries++){
     n=mode==="win"?5:(sv==="rnd"?3+Math.floor(Math.random()*3):+sv);
@@ -535,19 +828,13 @@ function dealBoard(){
     else{vb=best([...vill,...board]);const lo=Math.min(hb.score[0],vb.score[0]),c=cmp(hb.score,vb.score);
       if(lo>=1&&(Math.abs(hb.score[0]-vb.score[0])<=1||c===0))break}
   }
-  bq={mode,hero,vill,board,hb,vb};bAnswered=false;
-  document.getElementById("bSeat").textContent=mode==="win"?"ВСКРЫТИЕ НА РИВЕРЕ":STREET[n]+" · ВАША РУКА";
-  document.getElementById("bBoard").innerHTML=board.map(c=>cardHTML(c,true)).join("");
-  document.getElementById("bHands").innerHTML=
-    `<div class="who" id="whoH"><span class="label">Вы</span><div class="hand">${hero.map(c=>cardHTML(c,true)).join("")}</div></div>`+
+  bq={mode,hero,vill,board,hb,vb};
+  $("bSeat").textContent=mode==="win"?"ВСКРЫТИЕ НА РИВЕРЕ":STREET[n]+" · ВАША РУКА";
+  $("bBoard").innerHTML=board.map(c=>cardHTML(c,true)).join("");
+  $("bHands").innerHTML=`<div class="who" id="whoH"><span class="label">Вы</span><div class="hand">${hero.map(c=>cardHTML(c,true)).join("")}</div></div>`+
     (mode==="win"?`<div class="who" id="whoV"><span class="label">Соперник</span><div class="hand">${vill.map(c=>cardHTML(c,true)).join("")}</div></div>`:"");
-  const ch=document.getElementById("bChoices");
-  const opts=mode==="win"?["Я","Соперник","Ничья"]:CAT.slice();
-  ch.className="choices"+(mode==="win"?" three":"");
-  ch.innerHTML=opts.map((o,i)=>`<button id="bc-${i}" data-i="${i}">${o}</button>`).join("");
-  ch.querySelectorAll("button").forEach(b=>b.onclick=()=>answerBoard(+b.dataset.i));
-  document.getElementById("bFb").textContent=mode==="win"?"Чья рука сильнее?":"Какая у вас лучшая комбинация?";
-  document.getElementById("bNextB").hidden=true;
+  boardChoices(mode==="win"?["Я","Соперник","Ничья"]:CAT.slice(),mode==="win"?"three":"",answerBoard);
+  $("bFb").textContent=mode==="win"?"Чья рука сильнее?":"Какая у вас лучшая комбинация?";
 }
 function answerBoard(i){
   if(bAnswered||!bq)return;bAnswered=true;
@@ -556,6 +843,14 @@ function answerBoard(i){
     right=bq.hb.score[0];
     const usesHero=bq.hb.cards.some(c=>bq.hero.includes(c));
     fb=`У вас ${describe(bq.hb.score)}.`+(usesHero?"":" Ваши карты не участвуют: играет сам стол, у соперника минимум то же.");
+    const all=[...bq.hero,...bq.board],cnt={};all.forEach(c=>cnt[c.r]=(cnt[c.r]||0)+1);
+    const pairs=Object.values(cnt).filter(n=>n===2).length;
+    if(right===2&&pairs>=3)fb+=" Пар на самом деле три, но комбинация — это 5 карт, поэтому играют только две старшие пары и кикер. Младшая пара не считается.";
+    if(i===3&&right!==3)fb+=" Тройка — это три одинаковые карты, например 9-9-9, а не три пары.";
+    const bs={};bq.board.forEach(c=>bs[c.s]=(bs[c.s]||0)+1);
+    const fs=Object.keys(bs).find(s=>bs[s]>=3);
+    if(fs!==undefined&&right<5){const need=5-bs[fs],have=bq.hero.filter(c=>c.s==fs).length;
+      if(bs[fs]>=4||have>0)fb+=` На столе ${bs[fs]} ${SUITS[fs]}, для флеша нужно ещё ${need} такой масти у вас${have?`, а у вас ${have}`:", а у вас ни одной"}, флеша нет.`}
     show=[bq.hb.cards,["whoH"]];
   }else{
     const c=cmp(bq.hb.score,bq.vb.score);right=c>0?0:c<0?1:2;
@@ -564,43 +859,114 @@ function answerBoard(i){
       (c===0?" Лучшие пять карт равны, банк делится.":same?" Категория одна, решают старшие карты или кикер.":"");
     show=c<0?[bq.vb.cards,["whoV"]]:[bq.hb.cards,["whoH"]];
   }
-  const ok=i===right,s=stats.board;haptic(ok);
-  s.n++;if(ok){s.ok++;s.streak++;s.best=Math.max(s.best,s.streak)}else s.streak=0;save();
-  document.querySelectorAll("#bChoices button").forEach(b=>{b.disabled=true;const k=+b.dataset.i;
-    if(k===right)b.classList.add("right");else if(k===i)b.classList.add("wrong")});
-  document.getElementById("bFb").innerHTML=`<strong class="${ok?"ok":"no"}">${ok?"Верно.":"Ошибка."}</strong> ${fb}`;
+  const ok=i===right;scoreBoard(ok);markChoices(right,i);
+  $("bFb").innerHTML=`<strong class="${ok?"ok":"no"}">${ok?"Верно.":"Ошибка."}</strong> ${fb}`;
   const keys=new Set(show[0].map(key));
-  const scope=[document.getElementById("bBoard"),...show[1].map(id=>document.getElementById(id))];
+  const scope=[$("bBoard"),...show[1].map(id=>$(id))];
   document.querySelectorAll("#bBoard .card, #bHands .card").forEach(el=>{
-    const inScope=scope.some(sc=>sc.contains(el));
-    el.classList.toggle("use",inScope&&keys.has(el.dataset.k));
-    el.classList.toggle("off",!(inScope&&keys.has(el.dataset.k)));
+    const on=scope.some(sc=>sc.contains(el))&&keys.has(el.dataset.k);
+    el.classList.toggle("use",on);el.classList.toggle("off",!on);
   });
-  document.getElementById("bNextB").hidden=false;
-  renderBoardStats();
+  $("bNextB").hidden=false;
+}
+
+/* ---------- board: outs & pot odds ---------- */
+function dealOuts(sv){
+  let hero,board,n,unseen,outs;
+  for(let tries=0;tries<400;tries++){
+    n=sv==="3"||sv==="4"?+sv:(Math.random()<.6?3:4);
+    const d=newDeck();hero=d.slice(0,2);board=d.slice(2,2+n);unseen=d.slice(2+n);
+    const cur=best([...hero,...board]).score[0];if(cur>2)continue;
+    outs=unseen.filter(c=>{const b=best([...hero,...board,c]);return b.score[0]>=4&&b.cards.some(x=>hero.includes(x))});
+    if(outs.length>=4&&outs.length<=15)break;
+  }
+  const o=outs.length,U=unseen.length;
+  const eq=n===3?1-C2(U-o)/C2(U):o/U;
+  const approx=Math.min(100,o*(n===3?4:2));
+  let pot,bet,req;
+  for(let t=0;t<40;t++){pot=rnd([6,8,10,12,15,20,24,30,40]);bet=Math.round(pot*rnd([1/3,1/2,2/3,3/4,1,1.5])*2)/2;req=bet/(pot+2*bet);if(Math.abs(eq-req)>=0.04)break}
+  bq={mode:"outs",hero,board,n,outs,o,U,eq,approx,pot,bet,req,step:1};
+  $("bSeat").textContent=STREET[n]+" · ВАША РУКА";
+  $("bBoard").innerHTML=board.map(c=>cardHTML(c,true)).join("");
+  $("bHands").innerHTML=`<div class="who" id="whoH"><span class="label">Вы</span><div class="hand">${hero.map(c=>cardHTML(c,true)).join("")}</div></div>`;
+  const opts=new Set([o]);const pool=[4,6,8,9,10,12,13,15,o-1,o+1,o+3,o-3].filter(x=>x>=2&&x<=17&&x!==o);
+  while(opts.size<4)opts.add(rnd(pool));
+  bq.opts=[...opts].sort((a,b)=>a-b);
+  boardChoices(bq.opts.map(String),"four",answerOuts);
+  $("bFb").textContent="Сколько у вас аутов до стрита или сильнее?";
+}
+function fmtBB(x){return String(x).replace(".",",")}
+function answerOuts(i){
+  if(bAnswered||!bq)return;
+  if(bq.step===1){
+    const right=bq.opts.indexOf(bq.o),ok=i===right;scoreBoard(ok);markChoices(right,i);
+    $("bOuts").hidden=false;$("bOuts").innerHTML="Ауты: "+bq.outs.map(cardTxt).join(" ");
+    const two=bq.n===3;
+    $("bFb").innerHTML=`<strong class="${ok?"ok":"no"}">${ok?"Верно.":"Ошибка."}</strong> Аутов ${bq.o}. Эквити ≈ ${bq.o} × ${two?4:2} = ${bq.approx}% (точно ${Math.round(bq.eq*100)}%).`;
+    bq.step=2;
+    setTimeout(()=>{
+      $("bPot").hidden=false;
+      $("bPot").innerHTML=two?`Банк <b>${fmtBB(bq.pot)} бб</b> · соперник идёт олл-ин <b>${fmtBB(bq.bet)} бб</b>`:`Банк <b>${fmtBB(bq.pot)} бб</b> · соперник ставит <b>${fmtBB(bq.bet)} бб</b>`;
+      boardChoices(["Фолд","Колл"],"",answerOuts);
+      $("bFb").innerHTML+=` Теперь решение: колл или фолд?`;
+    },650);
+    return;
+  }
+  bAnswered=true;
+  const right=bq.eq>=bq.req?1:0,ok=i===right;scoreBoard(ok);markChoices(right,i);
+  const need=Math.round(bq.req*100);
+  $("bFb").innerHTML=`<strong class="${ok?"ok":"no"}">${ok?"Верно.":"Ошибка."}</strong> Нужно ${need}%: ${fmtBB(bq.bet)} / (${fmtBB(bq.pot)} + 2 × ${fmtBB(bq.bet)}). У вас около ${Math.round(bq.eq*100)}%, поэтому ${right?"колл выгоден":"выгоднее сбросить"}.`;
+  $("bNextB").hidden=false;
 }
 function renderBoardStats(){const s=stats.board;
-  document.getElementById("bAcc").textContent=s.n?Math.round(s.ok/s.n*100)+"%":"—";
-  document.getElementById("bStreak").textContent=s.streak;
-  document.getElementById("bBest").textContent=s.best;
-}
-document.getElementById("bNextB").onclick=dealBoard;
-document.getElementById("bMode").onchange=dealBoard;
-document.getElementById("bStreet").onchange=dealBoard;
+  $("bAcc").textContent=s.n?Math.round(s.ok/s.n*100)+"%":"—";$("bStreak").textContent=s.streak;$("bBest").textContent=s.best}
+$("bNextB").onclick=dealBoard;$("bMode").onchange=dealBoard;$("bStreet").onchange=dealBoard;
 
+/* ---------- keyboard ---------- */
 document.addEventListener("keydown",e=>{
   if(e.target.tagName==="SELECT")return;
-  if(!document.getElementById("board").hidden){
-    if((e.key===" "||e.key==="Enter")&&bAnswered){e.preventDefault();dealBoard()}return;
-  }
-  if(document.getElementById("quiz").hidden)return;
   const k=e.key.toLowerCase();
-  if(k==="f"||k==="а")answer(false);else if(k==="r"||k==="к")answer(true);
-  else if((k===" "||k==="enter")&&answered){e.preventDefault();deal()}
+  if(!$("board").hidden){if((k===" "||k==="enter")&&bAnswered){e.preventDefault();dealBoard()}return}
+  if($("quiz").hidden||!q)return;
+  if((k===" "||k==="enter")&&answered){e.preventDefault();deal();return}
+  if(answered)return;
+  if(k==="f"||k==="а")answer("F");
+  else if(k==="c"||k==="с")q.kind==="v"&&answer("C");
+  else if(k==="r"||k==="к")answer(q.kind==="o"?"R":"3");
 });
-depthCtl(document.getElementById("depthQ"));depthCtl(document.getElementById("depthC"));syncDepthUI();renderChart();
-renderStats();deal();renderBoardStats();dealBoard();
-try{if(cloudOK)tg.CloudStorage.getItem("sh-stats",(err,v)=>{if(err||!v)return;try{const c=JSON.parse(v);if(c&&c.pos){stats=c;stats.board=stats.board||{n:0,ok:0,streak:0,best:0};renderStats();renderBoardStats()}}catch(e){}})}catch(e){}
+
+/* ---------- init ---------- */
+function refreshAll(){normStats();renderStats();renderBoardStats();renderProgress()}
+segs();fillPosSelect();renderChart();refreshAll();deal();dealBoard();
+
+/* ---------- Telegram ---------- */
+(function(){
+  const API_URL=""; // адрес сервера Cloudflare Worker, без слэша в конце
+  const tg=window.Telegram&&window.Telegram.WebApp;
+  const inTg=!!(tg&&tg.platform&&tg.platform!=="unknown");
+  if(!inTg)return;
+  const theme=()=>{document.documentElement.dataset.theme=tg.colorScheme==="dark"?"dark":"light"};
+  tg.ready();tg.expand();theme();tg.onEvent("themeChanged",theme);
+  window.__fx=ok=>{try{tg.HapticFeedback.notificationOccurred(ok?"success":"error")}catch(e){}};
+  const cloud=tg.isVersionAtLeast&&tg.isVersionAtLeast("6.9");
+  let since=0;
+  window.__save=j=>{try{if(cloud)tg.CloudStorage.setItem("sh-stats",j)}catch(e){}if(API_URL&&++since>=10){since=0;sync()}};
+  if(cloud)tg.CloudStorage.getItem("sh-stats",(err,v)=>{if(err||!v)return;try{const c=JSON.parse(v);
+    if(c&&c.days){const local=Object.values(stats.days).reduce((a,d)=>a+d.n,0),remote=Object.values(c.days).reduce((a,d)=>a+d.n,0);
+      if(remote>local){stats=c;refreshAll();deal()}}}catch(e){}});
+  if(!API_URL)return;
+  $("lbBlock").hidden=false;
+  const payload=()=>{const days={};Object.keys(stats.days).sort().slice(-14).forEach(k=>days[k]=stats.days[k]);return JSON.stringify({initData:tg.initData,days})};
+  async function sync(){
+    try{const r=await fetch(API_URL+"/api/sync",{method:"POST",headers:{"content-type":"text/plain"},body:payload()});
+      const d=await r.json();if(!d.top)return;
+      $("lbList").innerHTML=d.top.length?d.top.map((x,i)=>`<li class="${x.id===d.me?"me":""}"><span class="n">${i+1}</span><span>${x.name.replace(/[<>&]/g,"")}</span><span class="s">${x.ok}</span></li>`).join(""):'<li><span></span><span>На этой неделе пока пусто</span><span></span></li>';
+    }catch(e){$("lbList").innerHTML='<li><span></span><span>Рейтинг сейчас недоступен</span><span></span></li>'}
+  }
+  document.addEventListener("visibilitychange",()=>{if(document.hidden&&navigator.sendBeacon)navigator.sendBeacon(API_URL+"/api/sync",new Blob([payload()],{type:"text/plain"}))});
+  sync();
+})();
+
 </script>
 </body>
 </html>
