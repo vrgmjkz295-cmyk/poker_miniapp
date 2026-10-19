@@ -77,8 +77,13 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline
 .card .pip{position:absolute;transform:translate(-50%,-50%);font-size:var(--pip);line-height:1}
 .card .pip.flip{transform:translate(-50%,-50%) rotate(180deg)}
 .card .ace{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:calc(var(--pip)*2.6);line-height:1}
-.card .court{position:absolute;inset:14% 23%;border:1.5px solid currentColor;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:rgba(167,125,44,.13)}
+.card .court{position:absolute;inset:14% 26%;border:1.5px solid currentColor;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:rgba(167,125,44,.13)}
 .card .court::before{content:"";position:absolute;inset:2px;border:1px dotted currentColor;border-radius:3px;opacity:.45}
+.card.r10 .idx{font-size:calc(var(--idx)*.82);letter-spacing:-.1em}
+.card.r10 .idx i{letter-spacing:0}
+.card.r10 .face{inset:13% 36%}
+.card.r10 .pip{font-size:calc(var(--pip)*.88)}
+.card.sm.r10 .face{inset:14% 37%}
 .card .court .g{font-size:calc(var(--pip)*2);line-height:1}
 .card .court .s{font-size:calc(var(--pip)*.9);line-height:1}
 .code{font:700 15px var(--f-mono);opacity:.85}
@@ -789,7 +794,7 @@ function cardHTML(c,sm){
   if(c.r==="A")mid=`<div class="ace">${su}</div>`;
   else if(COURT[c.r])mid=`<div class="court"><span class="g">${COURT[c.r]}</span><span class="s">${su}</span></div>`;
   else mid=`<div class="face">${PIPS[v].map(([x,y])=>`<span class="pip${y>50?" flip":""}" style="left:${x}%;top:${y}%">${su}</span>`).join("")}</div>`;
-  return `<div class="card${sm?" sm":""}${c.s===1||c.s===2?" red":""}" data-k="${key(c)}" aria-label="${rk}${su}">`+
+  return `<div class="card${sm?" sm":""}${c.r==="T"?" r10":""}${c.s===1||c.s===2?" red":""}" data-k="${key(c)}" aria-label="${rk}${su}">`+
     `<div class="idx tl">${rk}<i>${su}</i></div>${mid}<div class="idx br">${rk}<i>${su}</i></div></div>`;
 }
 const cardTxt=c=>`<span class="${c.s===1||c.s===2?"red":""}">${c.r==="T"?"10":c.r}${SUITS[c.s]}</span>`;
