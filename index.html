@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>Тренажёр стартовых рук</title>
+<style>
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-size:14px;-webkit-tap-highlight-color:transparent}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Chivo:wght@400;600;800&family=Chivo+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one narrow column, tabs on top; the 13×13 matrix is the centrepiece, quiz is a dealt hand on felt */
+:root{
+  --bg:#e9eee9; --surface:#f7f9f6; --fg:#16211b; --muted:#5d6b63; --line:#cdd6cf;
+  --felt:#1d4a36; --felt-fg:#eef4ef; --brass:#a77d2c;
+  --raise:#2f8a5b; --raise-fg:#ffffff; --fold:#dfe5e0; --fold-fg:#7b877f;
+  --good:#2f8a5b; --bad:#c2412f; --card:#ffffff; --card-red:#c2412f; --card-black:#17201b;
+  --f-display:"Gloock", Georgia, serif; --f-body:"Chivo", system-ui, sans-serif; --f-mono:"Chivo Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1511; --surface:#14201a; --fg:#e6ede8; --muted:#90a097; --line:#26362d;
+  --felt:#173b2b; --felt-fg:#eef4ef; --brass:#d2ab5f;
+  --raise:#3aa36d; --raise-fg:#06120c; --fold:#1b2921; --fold-fg:#5f7066;
+  --good:#4cbb80; --bad:#e2644f; --card:#f4f6f3; --card-red:#c2412f; --card-black:#17201b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1511; --surface:#14201a; --fg:#e6ede8; --muted:#90a097; --line:#26362d;
+  --felt:#173b2b; --felt-fg:#eef4ef; --brass:#d2ab5f;
+  --raise:#3aa36d; --raise-fg:#06120c; --fold:#1b2921; --fold-fg:#5f7066;
+  --good:#4cbb80; --bad:#e2644f; --card:#f4f6f3; --card-red:#c2412f; --card-black:#17201b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,7vw,40px);line-height:1.05;margin:0;text-wrap:balance}
+.lede{color:var(--muted);margin:6px 0 0;max-width:60ch}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+.tabs button{flex:1;border:0;background:none;color:var(--muted);font:600 14px var(--f-body);padding:9px 6px;border-radius:999px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pos{display:flex;flex-wrap:wrap;gap:6px}
+.pos button{border:1px solid var(--line);background:var(--surface);color:var(--fg);font:700 13px var(--f-mono);padding:7px 12px;border-radius:8px;cursor:pointer}
+.pos button[aria-pressed="true"]{background:var(--felt);color:var(--felt-fg);border-color:var(--felt)}
+.posinfo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.posinfo b{font-family:var(--f-display);font-weight:400;font-size:22px}
+.pct{font:700 14px var(--f-mono);color:var(--brass);font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;width:100%;max-width:560px}
+.cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font:500 clamp(8px,2.3vw,12px) var(--f-mono);border-radius:3px;background:var(--fold);color:var(--fold-fg);user-select:none}
+.cell.r{background:var(--raise);color:var(--raise-fg);font-weight:700}
+.cell.pair{box-shadow:inset 0 0 0 1px var(--brass)}
+.cell.hl{outline:2px solid var(--brass);outline-offset:1px;z-index:1}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+.note{font-size:13px;color:var(--muted);max-width:62ch;margin:0}
+.felt{background:var(--felt);color:var(--felt-fg);border-radius:20px;padding:22px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.seat{font:700 12px var(--f-mono);letter-spacing:.14em;background:rgba(0,0,0,.25);padding:5px 12px;border-radius:999px}
+.seat span{color:var(--brass)}
+.hand{display:flex;gap:10px}
+.card{width:72px;height:102px;background:var(--card);border-radius:9px;box-shadow:0 6px 16px rgba(0,0,0,.35);display:flex;flex-direction:column;justify-content:space-between;padding:6px 8px;font-family:var(--f-display);color:var(--card-black)}
+.card.red{color:var(--card-red)}
+.card .rk{font-size:28px;line-height:1;text-align:left}
+.card .st{font-size:30px;line-height:1;text-align:right}
+.code{font:700 15px var(--f-mono);opacity:.85}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:340px}
+.actions button{border:0;border-radius:12px;padding:14px;font:800 16px var(--f-body);letter-spacing:.04em;cursor:pointer}
+.b-fold{background:rgba(255,255,255,.12);color:var(--felt-fg)}
+.b-raise{background:var(--brass);color:#1b1407}
+.actions button:disabled{opacity:.45;cursor:default}
+.fb{min-height:48px;font-size:14px;max-width:46ch}
+.fb strong.ok{color:#8fe0b2}.fb strong.no{color:#ffb3a5}
+.next{border:1px solid rgba(255,255,255,.35);background:none;color:var(--felt-fg);border-radius:999px;padding:8px 18px;font:600 14px var(--f-body);cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat .v{font:700 22px var(--f-mono);font-variant-numeric:tabular-nums}
+.bypos{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-variant-numeric:tabular-nums}
+.bypos div{text-align:center;font:500 12px var(--f-mono);color:var(--muted)}
+.bypos b{display:block;font-size:15px;color:var(--fg)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.reset{border:0;background:none;color:var(--muted);text-decoration:underline;font:13px var(--f-body);cursor:pointer;padding:0}
+.ranks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.ranks li{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.ranks .n{font:700 13px var(--f-mono);color:var(--brass)}
+.ranks .nm{font-weight:600}
+.ranks .d{font-size:13px;color:var(--muted)}
+.mini{display:flex;gap:3px}
+.mini span{width:24px;height:33px;background:var(--card);border:1px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;font:700 11px var(--f-mono);color:var(--card-black);line-height:1;text-align:center}
+.mini span.red{color:var(--card-red)}
+.mini span.dim{opacity:.35}
+.tbl{width:100%;max-width:420px;align-self:center;display:block}
+.tbl.small{max-width:300px}
+.tbl .tab{fill:var(--felt);stroke:var(--brass);stroke-width:2}
+.tbl.onfelt .tab{fill:rgba(0,0,0,.2);stroke:rgba(255,255,255,.22)}
+.tbl .st-c{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.tbl .st-t{fill:var(--fg);font:700 12px var(--f-mono);text-anchor:middle}
+.tbl .st-n{fill:var(--muted);font:600 8.5px var(--f-body);text-anchor:middle}
+.tbl .sel .st-c{fill:var(--brass);stroke:var(--brass)}
+.tbl .sel .st-t,.tbl .sel .st-n{fill:#1b1407}
+.tbl .fold{opacity:.4}
+.tbl .chip{fill:#f4f6f3;stroke:#1b1407;stroke-width:1}
+.tbl .chip-t{font:800 9px var(--f-body);fill:#1b1407;text-anchor:middle}
+.tbl .blind{fill:var(--felt-fg);font:600 9px var(--f-mono);text-anchor:middle;opacity:.85}
+.tbl .mid{fill:var(--felt-fg);font:600 9.5px var(--f-body);text-anchor:middle;opacity:.7;letter-spacing:.1em}
+.tbl .click{cursor:pointer}
+.tbl .click:focus-visible .st-c{stroke:var(--brass);stroke-width:3}
+.seatinfo{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.seatinfo .ab{font:700 13px var(--f-mono);color:var(--brass);letter-spacing:.06em}
+.seatinfo .ttl{font-family:var(--f-display);font-size:22px;line-height:1.15}
+.seatinfo .ord{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.seatinfo .ord b{color:var(--fg);font-variant-numeric:tabular-nums}
+.posname{font-size:13px;opacity:.8;margin-top:-6px}
+.board{gap:6px;flex-wrap:wrap;justify-content:center}
+.card.sm{width:50px;height:70px;padding:4px 6px;border-radius:7px}
+.card.sm .rk{font-size:20px}.card.sm .st{font-size:22px}
+.card{transition:opacity .2s}
+.card.off{opacity:.35}
+.card.use{box-shadow:0 0 0 3px var(--brass),0 6px 16px rgba(0,0,0,.35)}
+.duo{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}
+.who{display:flex;flex-direction:column;align-items:center;gap:6px}
+.who .label{color:var(--felt-fg);opacity:.7}
+.who .hand{gap:6px}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:420px}
+.choices.three{grid-template-columns:repeat(3,1fr)}
+.choices button{background:rgba(255,255,255,.1);color:var(--felt-fg);border:0;border-radius:10px;padding:10px 8px;font:600 14px var(--f-body);cursor:pointer}
+.choices button.right{background:var(--brass);color:#1b1407}
+.choices button.wrong{background:#8a2f22;color:#fff}
+.choices button:disabled{cursor:default}
+.choices button:disabled:not(.right):not(.wrong){opacity:.4}
+@media (max-width:480px){.ranks li{grid-template-columns:24px 1fr}.ranks .mini{grid-column:2}.card{width:62px;height:88px}.card .rk{font-size:24px}.card .st{font-size:26px}}
+@media (prefers-reduced-motion:no-preference){.hand .card{animation:deal .25s ease-out both}.hand .card+.card{animation-delay:.07s}}
+@keyframes deal{from{transform:translateY(-10px);opacity:.3}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Тренажёр стартовых рук</h1>
+    <p class="lede">Холдем, 6-max, открытие рейзом, когда до вас все сбросили. Выучите таблицу по позициям, потом проверьте себя на раздачах.</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="t-quiz" aria-selected="true" data-tab="quiz">Тренировка</button>
+    <button role="tab" id="t-board" aria-selected="false" data-tab="board">На столе</button>
+    <button role="tab" id="t-chart" aria-selected="false" data-tab="chart">Таблица</button>
+    <button role="tab" id="t-ranks" aria-selected="false" data-tab="ranks">Комбинации</button>
+  </nav>
+
+  <!-- QUIZ -->
+  <section id="quiz" style="display:flex;flex-direction:column;gap:16px">
+    <div class="row"><span class="label">Позиция</span>
+      <select id="quizPos"><option value="ALL">Все позиции</option></select>
+      <span class="label">Руки</span>
+      <select id="quizMode"><option value="edge">Пограничные чаще</option><option value="any">Любые</option></select>
+    </div>
+    <div class="felt">
+      <div id="qTable" style="width:100%;display:flex;justify-content:center"></div>
+      <div class="seat">ВЫ НА <span id="qPos">CO</span> · ДО ВАС ФОЛД</div>
+      <div class="posname" id="qPosName"></div>
+      <div class="hand" id="qHand"></div>
+      <div class="code" id="qCode"></div>
+      <div class="actions">
+        <button class="b-fold" id="bFold">ФОЛД</button>
+        <button class="b-raise" id="bRaise">РЕЙЗ</button>
+      </div>
+      <div class="fb" id="qFb">Клавиши: F — фолд, R — рейз, пробел — дальше.</div>
+      <button class="next" id="bNext" hidden>Следующая раздача →</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="label">Точность</div><div class="v" id="sAcc">—</div></div>
+      <div class="stat"><div class="label">Серия</div><div class="v" id="sStreak">0</div></div>
+      <div class="stat"><div class="label">Рекорд</div><div class="v" id="sBest">0</div></div>
+    </div>
+    <div class="bypos" id="byPos"></div>
+    <div class="row" style="justify-content:space-between">
+      <p class="note">После ответа подсвечивается рука в таблице позиции, чтобы видеть, где проходит граница.</p>
+      <button class="reset" id="bReset">Сбросить статистику</button>
+    </div>
+    <div id="quizGridWrap" style="display:flex;flex-direction:column;gap:8px" hidden>
+      <span class="label" id="quizGridLabel"></span>
+      <div class="grid" id="quizGrid"></div>
+    </div>
+  </section>
+
+  <!-- BOARD -->
+  <section id="board" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="row"><span class="label">Задание</span>
+      <select id="bMode"><option value="combo">Какая у меня комбинация</option><option value="win">Кто выиграл банк</option></select>
+      <span class="label" id="bStreetL">Улица</span>
+      <select id="bStreet"><option value="rnd">Любая</option><option value="3">Флоп</option><option value="4">Тёрн</option><option value="5">Ривер</option></select>
+    </div>
+    <div class="felt">
+      <div class="seat" id="bSeat">ФЛОП</div>
+      <div class="hand board" id="bBoard"></div>
+      <div class="duo" id="bHands"></div>
+      <div class="choices" id="bChoices"></div>
+      <div class="fb" id="bFb"></div>
+      <button class="next" id="bNextB" hidden>Следующая раздача →</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="label">Точность</div><div class="v" id="bAcc">—</div></div>
+      <div class="stat"><div class="label">Серия</div><div class="v" id="bStreak">0</div></div>
+      <div class="stat"><div class="label">Рекорд</div><div class="v" id="bBest">0</div></div>
+    </div>
+    <p class="note">Комбинация всегда из лучших 5 карт: ваши 2 + общие. После ответа подсвечиваются карты, которые её составляют. Пробел — следующая раздача.</p>
+  </section>
+
+  <!-- CHART -->
+  <section id="chart" hidden style="display:flex;flex-direction:column;gap:14px">
+    <p class="note">Шесть мест за столом 6-max. Нажмите на место, чтобы увидеть расшифровку и его таблицу. Чем позже вы ходите, тем больше знаете о соперниках, поэтому с поздних мест открываем больше рук.</p>
+    <div id="tableChart"></div>
+    <div class="pos" id="posBtns"></div>
+    <div class="seatinfo" id="seatInfo"></div>
+    <div id="rangeBlock" style="display:flex;flex-direction:column;gap:14px">
+    <div class="posinfo"><b id="posName"></b><span class="pct" id="posPct"></span></div>
+    <p class="note" id="posDesc"></p>
+    <div class="grid" id="grid"></div>
+    <div class="legend">
+      <span><i style="background:var(--raise)"></i>Рейз</span>
+      <span><i style="background:var(--fold)"></i>Фолд</span>
+      <span>Выше диагонали — одномастные (s), ниже — разномастные (o)</span>
+    </div>
+    <p class="note" id="posRange" style="font-family:var(--f-mono);font-size:12px"></p>
+    </div>
+  </section>
+
+  <!-- RANKS -->
+  <section id="ranks" hidden style="display:flex;flex-direction:column;gap:10px">
+    <p class="note">От сильнейшей к слабейшей. Комбинация собирается из лучших 5 карт: 2 ваших + 5 общих.</p>
+    <ul class="ranks" id="rankList"></ul>
+  </section>
+
+  <p class="note">Диапазоны упрощённые и усреднённые, это стартовая точка для кеша 6-max со 100 бб. Против агрессивных или слабых соперников границы смещаются.</p>
+</div>
+
+<script>
+const tg=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData!==undefined?window.Telegram.WebApp:null;
+const inTg=!!(tg&&tg.platform&&tg.platform!=="unknown");
+function applyTgTheme(){if(inTg)document.documentElement.dataset.theme=tg.colorScheme==="dark"?"dark":"light"}
+if(inTg){tg.ready();tg.expand();applyTgTheme();tg.onEvent("themeChanged",applyTgTheme)}
+const haptic=ok=>{try{if(inTg)tg.HapticFeedback.notificationOccurred(ok?"success":"error")}catch(e){}};
+const cloudOK=inTg&&tg.isVersionAtLeast&&tg.isVersionAtLeast("6.9");
+</script>
+<script>
+const R="AKQJT98765432";
+const POS={
+  UTG:{name:"UTG — первым слова",desc:"Самая ранняя позиция: после вас ещё пятеро. Играем только сильное.",
+    range:"22+, A2s+, K9s+, QTs+, JTs, T9s, AJo+, KQo"},
+  MP:{name:"MP — средняя",desc:"Чуть шире UTG: добавляются связки и бродвей разномастные.",
+    range:"22+, A2s+, K8s+, Q9s+, J9s+, T9s, 98s, 87s, ATo+, KJo+, QJo"},
+  CO:{name:"CO — перед баттоном",desc:"Позади трое. Открываем треть рук, много одномастных.",
+    range:"22+, A2s+, K5s+, Q8s+, J8s+, T8s+, 97s+, 87s, 76s, 65s, A8o+, KTo+, QTo+, JTo"},
+  BTN:{name:"BTN — баттон",desc:"Лучшая позиция: на всех улицах ходите последним. Открываем почти половину.",
+    range:"22+, A2s+, K2s+, Q4s+, J6s+, T6s+, 96s+, 85s+, 75s+, 64s+, 54s, A2o+, K8o+, Q9o+, J9o+, T8o+, 98o"},
+  SB:{name:"SB — малый блайнд",desc:"Против одного BB, но без позиции. Широко, стратегия рейз-или-фолд.",
+    range:"22+, A2s+, K2s+, Q5s+, J7s+, T7s+, 97s+, 86s+, 75s+, 65s, 54s, A2o+, K9o+, Q9o+, J9o+, T9o"}
+};
+const ORDER=["UTG","MP","CO","BTN","SB"];
+const ri=c=>R.indexOf(c);
+function handAt(i,j){return i===j?R[i]+R[j]:i<j?R[i]+R[j]+"s":R[j]+R[i]+"o"}
+function parse(str){
+  const set=new Set();
+  str.split(",").map(s=>s.trim()).forEach(t=>{
+    const plus=t.endsWith("+");t=t.replace("+","");
+    const a=t[0],b=t[1],k=t[2]||"";
+    if(a===b){const s=ri(a);for(let i=plus?0:s;i<=s;i++)set.add(R[i]+R[i]);}
+    else{const hi=ri(a),lo=ri(b);for(let i=plus?hi+1:lo;i<=lo;i++)set.add(a+R[i]+k);}
+  });
+  return set;
+}
+for(const p of ORDER){POS[p].set=parse(POS[p].range)}
+const combos=h=>h.length===2?6:h[2]==="s"?4:12;
+const pctOf=set=>{let c=0;set.forEach(h=>c+=combos(h));return (c/1326*100).toFixed(1)};
+const ALL=[];for(let i=0;i<13;i++)for(let j=0;j<13;j++)ALL.push({h:handAt(i,j),i,j});
+
+function drawGrid(el,p,hl){
+  el.innerHTML="";const set=POS[p].set;
+  ALL.forEach(({h,i,j})=>{
+    const d=document.createElement("div");
+    d.className="cell"+(set.has(h)?" r":"")+(i===j?" pair":"")+(h===hl?" hl":"");
+    d.textContent=h;d.title=h;el.appendChild(d);
+  });
+}
+
+/* seats */
+const SEAT={
+  UTG:{en:"Under the Gun",ru:"«Под прицелом»",pre:1,post:3,desc:"Сидит слева от большого блайнда и первым принимает решение до флопа. За вами ещё пятеро игроков, поэтому играем самый узкий диапазон."},
+  MP:{en:"Middle Position",ru:"Средняя позиция",pre:2,post:4,desc:"Второй по очереди. В некоторых таблицах 6-max это место называют HJ (hijack, «угонщик»)."},
+  CO:{en:"Cutoff",ru:"Катофф, «отсекающий»",pre:3,post:5,desc:"Сидит справа от баттона. Рейз отсюда часто «отсекает» баттон, и тогда после флопа последнее слово у вас."},
+  BTN:{en:"Button",ru:"Баттон, место дилера",pre:4,post:6,desc:"Здесь лежит фишка дилера D. После флопа вы ходите последним на всех улицах, это лучшее место за столом."},
+  SB:{en:"Small Blind",ru:"Малый блайнд",pre:5,post:1,desc:"Обязательная ставка 0,5 бб вслепую, ещё до раздачи. До флопа говорит предпоследним, а после флопа первым, то есть без позиции."},
+  BB:{en:"Big Blind",ru:"Большой блайнд",pre:6,post:2,desc:"Обязательная ставка 1 бб вслепую. До флопа говорит последним. Если до него все сбросили, просто забирает блайнды, поэтому своей таблицы открытия у BB нет."}
+};
+const SEAT_ORDER=["UTG","MP","CO","BTN","SB","BB"];
+const SEAT_ANG={BTN:60,SB:120,BB:180,UTG:240,MP:300,CO:0};
+function tableSVG(sel,{felt=false,folded=[],click=false}={}){
+  const cx=180,cy=118,rx=128,ry=70,pt=(a,fx,fy)=>[cx+fx*Math.cos(a*Math.PI/180),cy+fy*Math.sin(a*Math.PI/180)];
+  let s=`<svg class="tbl${felt?" onfelt small":""}" viewBox="0 0 360 236" role="img" aria-label="Схема стола, ваше место ${sel}">`;
+  s+=`<ellipse class="tab" cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>`;
+  s+=`<text class="mid" x="${cx}" y="${cy+3}">${felt?"":"ХОД ДО ФЛОПА ПО ЧАСОВОЙ ↻"}</text>`;
+  const [dx,dy]=pt(SEAT_ANG.BTN,rx*.72,ry*.66);
+  s+=`<circle class="chip" cx="${dx}" cy="${dy}" r="9"/><text class="chip-t" x="${dx}" y="${dy+3}">D</text>`;
+  [["SB","0,5 бб"],["BB","1 бб"]].forEach(([p,t])=>{const [x,y]=pt(SEAT_ANG[p],rx*.68,ry*.6);s+=`<text class="blind" x="${x}" y="${y+3}">${t}</text>`});
+  SEAT_ORDER.forEach(p=>{
+    const [x,y]=pt(SEAT_ANG[p],rx+26,ry+24),f=folded.includes(p);
+    s+=`<g class="${p===sel?"sel ":""}${f?"fold ":""}${click?"click":""}" data-seat="${p}" ${click?`tabindex="0" role="button" aria-label="${p}, ${SEAT[p].ru}"`:""}>
+      <circle class="st-c" cx="${x}" cy="${y}" r="23"/>
+      <text class="st-t" x="${x}" y="${y+1}">${p}</text>
+      <text class="st-n" x="${x}" y="${y+12}">${f?"фолд":p===sel&&felt?"вы":SEAT[p].pre+"-й"}</text></g>`;
+  });
+  return s+"</svg>";
+}
+
+/* chart tab */
+let cur="CO";
+const posBtns=document.getElementById("posBtns");
+SEAT_ORDER.forEach(p=>{const b=document.createElement("button");b.textContent=p;b.id="pos-"+p;b.onclick=()=>{cur=p;renderChart()};posBtns.appendChild(b)});
+ORDER.forEach(p=>document.getElementById("quizPos").insertAdjacentHTML("beforeend",`<option value="${p}">${p} · ${SEAT[p].ru.replace(/«|»/g,"")}</option>`));
+const tc=document.getElementById("tableChart");
+tc.addEventListener("click",e=>{const g=e.target.closest("[data-seat]");if(g){cur=g.dataset.seat;renderChart()}});
+tc.addEventListener("keydown",e=>{const g=e.target.closest("[data-seat]");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();cur=g.dataset.seat;renderChart();tc.querySelector(`[data-seat="${cur}"]`).focus()}});
+function renderChart(){
+  posBtns.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.textContent===cur));
+  tc.innerHTML=tableSVG(cur,{click:true});
+  const S=SEAT[cur];
+  document.getElementById("seatInfo").innerHTML=`<span class="ab">${cur} = ${S.en}</span><span class="ttl">${S.ru}</span>
+    <div class="ord"><span>До флопа ходит <b>${S.pre}-м</b> из 6</span><span>После флопа <b>${S.post}-м</b> из 6</span></div>
+    <p class="note" style="color:var(--fg)">${S.desc}</p>`;
+  document.getElementById("rangeBlock").hidden=cur==="BB";
+  if(cur==="BB")return;
+  const P=POS[cur];
+  document.getElementById("posName").textContent=P.name;
+  document.getElementById("posPct").textContent=`${pctOf(P.set)}% рук · ${P.set.size} из 169`;
+  document.getElementById("posDesc").textContent=P.desc;
+  document.getElementById("posRange").textContent=P.range;
+  drawGrid(document.getElementById("grid"),cur);
+}
+renderChart();
+
+/* ranks tab */
+const RANKS=[
+  ["Роял-флеш","Туз, король, дама, валет, десятка одной масти",["A♠","K♠","Q♠","J♠","T♠"]],
+  ["Стрит-флеш","Пять карт подряд одной масти",["9♥","8♥","7♥","6♥","5♥"]],
+  ["Каре","Четыре карты одного достоинства",["Q♠","Q♥","Q♦","Q♣","4♠"]],
+  ["Фулл-хаус","Тройка + пара",["8♠","8♥","8♦","K♣","K♠"]],
+  ["Флеш","Пять карт одной масти, не подряд",["A♦","J♦","8♦","5♦","2♦"]],
+  ["Стрит","Пять карт подряд, масти любые. A-2-3-4-5 тоже стрит",["T♣","9♦","8♠","7♥","6♣"]],
+  ["Тройка (сет/трипс)","Три карты одного достоинства",["7♠","7♥","7♦","K♣","2♠"]],
+  ["Две пары","Две разные пары",["J♠","J♥","4♦","4♣","A♠"]],
+  ["Пара","Две карты одного достоинства",["T♠","T♥","A♦","8♣","3♠"]],
+  ["Старшая карта","Ничего не собрано, решает старшая",["A♠","Q♥","9♦","6♣","3♠"]]
+];
+const DIM={6:[4],7:[3,4],8:[4],9:[2,3,4],10:[1,2,3,4]};
+document.getElementById("rankList").innerHTML=RANKS.map(([n,d,c],k)=>
+  `<li><span class="n">${String(k+1).padStart(2,"0")}</span><div><div class="nm">${n}</div><div class="d">${d}</div></div>
+   <div class="mini">${c.map((x,ci)=>`<span class="${/[♥♦]/.test(x)?"red":""} ${(DIM[k+1]||[]).includes(ci)?"dim":""}">${x[0]==="T"?"10":x[0]}<br>${x[1]}</span>`).join("")}</div></li>`).join("");
+
+/* tabs */
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  ["quiz","board","chart","ranks"].forEach(id=>document.getElementById(id).hidden=id!==b.dataset.tab);
+});
+
+/* quiz */
+const SUITS=["♠","♥","♦","♣"];
+let stats={n:0,ok:0,streak:0,best:0,pos:{}};
+try{const s=JSON.parse(localStorage.getItem("sh-stats")||"null");if(s&&s.pos)stats=s}catch(e){}
+const save=()=>{const j=JSON.stringify(stats);try{localStorage.setItem("sh-stats",j)}catch(e){}try{if(cloudOK)tg.CloudStorage.setItem("sh-stats",j)}catch(e){}};
+let q=null,answered=false;
+
+function isEdge(p,{i,j}){
+  const set=POS[p].set,inR=set.has(handAt(i,j));
+  return [[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>{const x=i+a,y=j+b;return x>=0&&x<13&&y>=0&&y<13&&set.has(handAt(x,y))!==inR});
+}
+function pickWeighted(){const r=Math.random()*1326;let acc=0;for(const c of ALL){acc+=combos(c.h);if(acc>r)return c}return ALL[0]}
+function deal(){
+  const pp=document.getElementById("quizPos").value;
+  const p=pp==="ALL"?ORDER[Math.floor(Math.random()*5)]:pp;
+  let c;
+  if(document.getElementById("quizMode").value==="edge"&&Math.random()<0.65){
+    const e=ALL.filter(x=>isEdge(p,x));c=e[Math.floor(Math.random()*e.length)];
+  }else c=pickWeighted();
+  const h=c.h,s1=Math.floor(Math.random()*4);
+  let s2=s1;if(h.length===2||h[2]==="o"){do{s2=Math.floor(Math.random()*4)}while(s2===s1)}
+  q={p,h,cards:[[h[0],s1],[h[1],s2]]};answered=false;
+  document.getElementById("qPos").textContent=p;
+  document.getElementById("qPosName").textContent=`${SEAT[p].en} · ${SEAT[p].ru}`;
+  document.getElementById("qTable").innerHTML=tableSVG(p,{felt:true,folded:SEAT_ORDER.filter(x=>SEAT[x].pre<SEAT[p].pre)});
+  document.getElementById("qHand").innerHTML=q.cards.map(([r,s])=>
+    `<div class="card ${s===1||s===2?"red":""}"><div class="rk">${r==="T"?"10":r}</div><div class="st">${SUITS[s]}</div></div>`).join("");
+  document.getElementById("qCode").textContent=h+(h.length===2?" · пара":h[2]==="s"?" · одномастные":" · разномастные");
+  document.getElementById("qFb").textContent="Рейз или фолд?";
+  document.getElementById("bNext").hidden=true;
+  document.getElementById("bFold").disabled=document.getElementById("bRaise").disabled=false;
+  document.getElementById("quizGridWrap").hidden=true;
+}
+function answer(raise){
+  if(answered||!q)return;answered=true;
+  const should=POS[q.p].set.has(q.h),ok=raise===should;haptic(ok);
+  stats.n++;if(ok){stats.ok++;stats.streak++;stats.best=Math.max(stats.best,stats.streak)}else stats.streak=0;
+  const ps=stats.pos[q.p]||(stats.pos[q.p]={n:0,ok:0});ps.n++;if(ok)ps.ok++;save();
+  const tok=POS[q.p].range.split(", ").find(t=>parse(t).has(q.h));
+  document.getElementById("qFb").innerHTML=ok
+    ?`<strong class="ok">Верно.</strong> ${should?`${q.h} на ${q.p} открываем: входит в ${tok}.`:`${q.h} на ${q.p} не открываем.`}`
+    :`<strong class="no">Ошибка.</strong> ${should?`Правильно рейз: ${q.h} входит в ${tok}.`:`Правильно фолд: ${q.h} слишком слабая для ${q.p}.`}`;
+  document.getElementById("bNext").hidden=false;
+  document.getElementById("bFold").disabled=document.getElementById("bRaise").disabled=true;
+  document.getElementById("quizGridLabel").textContent=`Таблица ${q.p} · ${pctOf(POS[q.p].set)}% рук`;
+  drawGrid(document.getElementById("quizGrid"),q.p,q.h);
+  document.getElementById("quizGridWrap").hidden=false;
+  renderStats();
+}
+function renderStats(){
+  document.getElementById("sAcc").textContent=stats.n?Math.round(stats.ok/stats.n*100)+"%":"—";
+  document.getElementById("sStreak").textContent=stats.streak;
+  document.getElementById("sBest").textContent=stats.best;
+  document.getElementById("byPos").innerHTML=ORDER.map(p=>{const s=stats.pos[p];
+    return `<div>${p}<b>${s&&s.n?Math.round(s.ok/s.n*100)+"%":"—"}</b>${s?s.n:0} разд.</div>`}).join("");
+}
+document.getElementById("bFold").onclick=()=>answer(false);
+document.getElementById("bRaise").onclick=()=>answer(true);
+document.getElementById("bNext").onclick=deal;
+document.getElementById("quizPos").onchange=deal;
+document.getElementById("quizMode").onchange=deal;
+document.getElementById("bReset").onclick=()=>{stats={n:0,ok:0,streak:0,best:0,pos:{},board:stats.board};save();renderStats()};
+/* board mode */
+const V={A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2};
+const CAT=["Старшая карта","Пара","Две пары","Тройка","Стрит","Флеш","Фулл-хаус","Каре","Стрит-флеш","Роял-флеш"];
+const PL={14:"тузы",13:"короли",12:"дамы",11:"валеты",10:"десятки",9:"девятки",8:"восьмёрки",7:"семёрки",6:"шестёрки",5:"пятёрки",4:"четвёрки",3:"тройки",2:"двойки"};
+const SG={14:"туз",13:"король",12:"дама",11:"валет",10:"десятка",9:"девятка",8:"восьмёрка",7:"семёрка",6:"шестёрка",5:"пятёрка",4:"четвёрка",3:"тройка",2:"двойка"};
+function eval5(cs){
+  const vals=cs.map(c=>V[c.r]).sort((a,b)=>b-a);
+  const flush=cs.every(c=>c.s===cs[0].s);
+  const uniq=[...new Set(vals)];let sh=0;
+  if(uniq.length===5){if(uniq[0]-uniq[4]===4)sh=uniq[0];else if(uniq.join()==="14,5,4,3,2")sh=5}
+  const cnt={};vals.forEach(v=>cnt[v]=(cnt[v]||0)+1);
+  const g=Object.entries(cnt).map(([v,c])=>[c,+v]).sort((a,b)=>b[0]-a[0]||b[1]-a[1]);const o=g.map(x=>x[1]);
+  if(sh&&flush)return[sh===14?9:8,sh];
+  if(g[0][0]===4)return[7,...o];
+  if(g[0][0]===3&&g[1][0]===2)return[6,...o];
+  if(flush)return[5,...vals];
+  if(sh)return[4,sh];
+  if(g[0][0]===3)return[3,...o];
+  if(g[0][0]===2&&g[1][0]===2)return[2,...o];
+  if(g[0][0]===2)return[1,...o];
+  return[0,...vals];
+}
+const cmp=(a,b)=>{for(let i=0;i<Math.max(a.length,b.length);i++){const d=(a[i]||0)-(b[i]||0);if(d)return d}return 0};
+function best(cards){
+  let bs=null,bc=null;const n=cards.length;
+  const pick=(st,acc)=>{if(acc.length===5){const sc=eval5(acc);if(!bs||cmp(sc,bs)>0){bs=sc;bc=acc.slice()}return}
+    for(let i=st;i<n;i++){acc.push(cards[i]);pick(i+1,acc);acc.pop()}};
+  pick(0,[]);return{score:bs,cards:bc};
+}
+const GEN={14:"туза",13:"короля",12:"дамы",11:"валета",10:"десятки",9:"девятки",8:"восьмёрки",7:"семёрки",6:"шестёрки",5:"пятёрки"};
+function describe(s){
+  const [c,a,b]=s;
+  switch(c){
+    case 0:return`старшая карта ${SG[a]}`;
+    case 1:return`пара, ${PL[a]}, кикер ${SG[b]}`;
+    case 2:return`две пары, ${PL[a]} и ${PL[b]}`;
+    case 3:return`тройка, ${PL[a]}`;
+    case 4:return`стрит до ${GEN[a]}`;
+    case 5:return`флеш, старшая ${SG[a]}`;
+    case 6:return`фулл-хаус, ${PL[a]} и ${PL[b]}`;
+    case 7:return`каре, ${PL[a]}`;
+    case 8:return`стрит-флеш, старшая ${SG[a]}`;
+    default:return"роял-флеш";
+  }
+}
+const key=c=>c.r+c.s;
+const cardHTML=(c,sm)=>`<div class="card${sm?" sm":""} ${c.s===1||c.s===2?"red":""}" data-k="${key(c)}"><div class="rk">${c.r==="T"?"10":c.r}</div><div class="st">${SUITS[c.s]}</div></div>`;
+function newDeck(){const d=[];for(const r of R)for(let s=0;s<4;s++)d.push({r,s});
+  for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}return d}
+const W=[.3,.45,.9,1,1,1,1,1,1,1];
+const STREET={3:"ФЛОП",4:"ТЁРН",5:"РИВЕР"};
+let bq=null,bAnswered=false;
+stats.board=stats.board||{n:0,ok:0,streak:0,best:0};
+
+function dealBoard(){
+  const mode=document.getElementById("bMode").value;
+  const sv=document.getElementById("bStreet").value;
+  document.getElementById("bStreet").hidden=document.getElementById("bStreetL").hidden=mode==="win";
+  let d,hero,vill,board,hb,vb,n;
+  for(let tries=0;tries<200;tries++){
+    n=mode==="win"?5:(sv==="rnd"?3+Math.floor(Math.random()*3):+sv);
+    d=newDeck();hero=d.slice(0,2);vill=d.slice(2,4);board=d.slice(4,4+n);
+    hb=best([...hero,...board]);
+    if(mode==="combo"){if(Math.random()<W[hb.score[0]])break}
+    else{vb=best([...vill,...board]);const lo=Math.min(hb.score[0],vb.score[0]),c=cmp(hb.score,vb.score);
+      if(lo>=1&&(Math.abs(hb.score[0]-vb.score[0])<=1||c===0))break}
+  }
+  bq={mode,hero,vill,board,hb,vb};bAnswered=false;
+  document.getElementById("bSeat").textContent=mode==="win"?"ВСКРЫТИЕ НА РИВЕРЕ":STREET[n]+" · ВАША РУКА";
+  document.getElementById("bBoard").innerHTML=board.map(c=>cardHTML(c,true)).join("");
+  document.getElementById("bHands").innerHTML=
+    `<div class="who" id="whoH"><span class="label">Вы</span><div class="hand">${hero.map(c=>cardHTML(c,true)).join("")}</div></div>`+
+    (mode==="win"?`<div class="who" id="whoV"><span class="label">Соперник</span><div class="hand">${vill.map(c=>cardHTML(c,true)).join("")}</div></div>`:"");
+  const ch=document.getElementById("bChoices");
+  const opts=mode==="win"?["Я","Соперник","Ничья"]:CAT.slice();
+  ch.className="choices"+(mode==="win"?" three":"");
+  ch.innerHTML=opts.map((o,i)=>`<button id="bc-${i}" data-i="${i}">${o}</button>`).join("");
+  ch.querySelectorAll("button").forEach(b=>b.onclick=()=>answerBoard(+b.dataset.i));
+  document.getElementById("bFb").textContent=mode==="win"?"Чья рука сильнее?":"Какая у вас лучшая комбинация?";
+  document.getElementById("bNextB").hidden=true;
+}
+function answerBoard(i){
+  if(bAnswered||!bq)return;bAnswered=true;
+  let right,fb,show;
+  if(bq.mode==="combo"){
+    right=bq.hb.score[0];
+    const usesHero=bq.hb.cards.some(c=>bq.hero.includes(c));
+    fb=`У вас ${describe(bq.hb.score)}.`+(usesHero?"":" Ваши карты не участвуют: играет сам стол, у соперника минимум то же.");
+    show=[bq.hb.cards,["whoH"]];
+  }else{
+    const c=cmp(bq.hb.score,bq.vb.score);right=c>0?0:c<0?1:2;
+    const same=bq.hb.score[0]===bq.vb.score[0];
+    fb=`У вас ${describe(bq.hb.score)}. У соперника ${describe(bq.vb.score)}.`+
+      (c===0?" Лучшие пять карт равны, банк делится.":same?" Категория одна, решают старшие карты или кикер.":"");
+    show=c<0?[bq.vb.cards,["whoV"]]:[bq.hb.cards,["whoH"]];
+  }
+  const ok=i===right,s=stats.board;haptic(ok);
+  s.n++;if(ok){s.ok++;s.streak++;s.best=Math.max(s.best,s.streak)}else s.streak=0;save();
+  document.querySelectorAll("#bChoices button").forEach(b=>{b.disabled=true;const k=+b.dataset.i;
+    if(k===right)b.classList.add("right");else if(k===i)b.classList.add("wrong")});
+  document.getElementById("bFb").innerHTML=`<strong class="${ok?"ok":"no"}">${ok?"Верно.":"Ошибка."}</strong> ${fb}`;
+  const keys=new Set(show[0].map(key));
+  const scope=[document.getElementById("bBoard"),...show[1].map(id=>document.getElementById(id))];
+  document.querySelectorAll("#bBoard .card, #bHands .card").forEach(el=>{
+    const inScope=scope.some(sc=>sc.contains(el));
+    el.classList.toggle("use",inScope&&keys.has(el.dataset.k));
+    el.classList.toggle("off",!(inScope&&keys.has(el.dataset.k)));
+  });
+  document.getElementById("bNextB").hidden=false;
+  renderBoardStats();
+}
+function renderBoardStats(){const s=stats.board;
+  document.getElementById("bAcc").textContent=s.n?Math.round(s.ok/s.n*100)+"%":"—";
+  document.getElementById("bStreak").textContent=s.streak;
+  document.getElementById("bBest").textContent=s.best;
+}
+document.getElementById("bNextB").onclick=dealBoard;
+document.getElementById("bMode").onchange=dealBoard;
+document.getElementById("bStreet").onchange=dealBoard;
+
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="SELECT")return;
+  if(!document.getElementById("board").hidden){
+    if((e.key===" "||e.key==="Enter")&&bAnswered){e.preventDefault();dealBoard()}return;
+  }
+  if(document.getElementById("quiz").hidden)return;
+  const k=e.key.toLowerCase();
+  if(k==="f"||k==="а")answer(false);else if(k==="r"||k==="к")answer(true);
+  else if((k===" "||k==="enter")&&answered){e.preventDefault();deal()}
+});
+renderStats();deal();renderBoardStats();dealBoard();
+try{if(cloudOK)tg.CloudStorage.getItem("sh-stats",(err,v)=>{if(err||!v)return;try{const c=JSON.parse(v);if(c&&c.pos){stats=c;stats.board=stats.board||{n:0,ok:0,streak:0,best:0};renderStats();renderBoardStats()}}catch(e){}})}catch(e){}
+</script>
+</body>
+</html>
