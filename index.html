@@ -2,6 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>Тренажёр стартовых рук</title>
@@ -124,11 +126,6 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
 .pchart .pgoal{stroke:var(--muted);stroke-dasharray:3 3;stroke-width:1}
 .pchart .pgl{fill:var(--muted);font:600 9px var(--f-body)}
 .pchart .pbase{stroke:var(--line);stroke-width:1}
-.lb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.lb li{display:grid;grid-template-columns:24px 1fr auto;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
-.lb li.me{font-weight:700}
-.lb .n{font:700 12px var(--f-mono);color:var(--brass)}
-.lb .s{font:600 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
 .ranks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .ranks li{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .ranks .n{font:700 13px var(--f-mono);color:var(--brass)}
@@ -254,11 +251,6 @@ select{font:600 14px var(--f-body);padding:7px 10px;border-radius:8px;border:1px
       <div class="gbar"><i id="gBar" style="width:0%"></i></div>
       <svg class="pchart" id="pChart" viewBox="0 0 360 150" role="img" aria-label="Раздачи и точность за 14 дней"></svg>
       <p class="note">Столбик — сколько раздач вы сыграли за день во всех режимах, цифра над ним — точность. Пунктир — цель на день.</p>
-    </div>
-    <div class="panel" id="lbBlock" hidden>
-      <h2>Рейтинг недели</h2>
-      <ol class="lb" id="lbList"></ol>
-      <p class="note">Верные ответы с понедельника среди всех, кто открывает тренажёр через бота.</p>
     </div>
   </section>
 
@@ -454,11 +446,30 @@ const isPush=()=>depth===10;
 const GOAL=20;
 let stats={};
 try{stats=JSON.parse(localStorage.getItem("sh-stats")||"{}")||{}}catch(e){stats={}}
-function normStats(){
-  stats.n=stats.n||0;stats.ok=stats.ok||0;stats.streak=stats.streak||0;stats.best=stats.best||0;
-  stats.pos=stats.pos||{};stats.mist=stats.mist||{};stats.days=stats.days||{};
-  stats.board=stats.board||{n:0,ok:0,streak:0,best:0};
+/* saved stats come from storage, so rebuild them from validated values only */
+const HANDS=new Set(ALL.map(x=>x.h));
+const num=x=>{const v=Math.floor(Number(x));return Number.isFinite(v)&&v>=0?Math.min(v,1e7):0};
+const isObj=x=>x&&typeof x==="object"&&!Array.isArray(x);
+function validPosKey(k){
+  if(k.startsWith("v:"))return Object.prototype.hasOwnProperty.call(FACING,k.slice(2));
+  const [f,d,p]=k.split("|");return !!FMT[f]&&!!R6[d]&&FMT[f].open.includes(p)&&k.split("|").length===3;
 }
+function validMistKey(k){
+  const a=k.split("|");
+  if(a[0]==="o")return a.length===5&&!!FMT[a[1]]&&!!R6[a[2]]&&FMT[a[1]].open.includes(a[3])&&HANDS.has(a[4]);
+  if(a[0]==="v")return a.length===4&&VS_PAIRS.some(([o,h])=>o===a[1]&&h===a[2])&&HANDS.has(a[3]);
+  return false;
+}
+function cleanStats(raw){
+  const r=isObj(raw)?raw:{},out={n:num(r.n),ok:num(r.ok),streak:num(r.streak),best:num(r.best),pos:{},mist:{},days:{},board:{n:0,ok:0,streak:0,best:0}};
+  if(out.ok>out.n)out.ok=out.n;
+  if(isObj(r.pos))for(const k in r.pos)if(validPosKey(k)&&isObj(r.pos[k])){const n=num(r.pos[k].n);out.pos[k]={n,ok:Math.min(n,num(r.pos[k].ok))}}
+  if(isObj(r.mist))for(const k in r.mist)if(validMistKey(k)){const v=Math.min(3,num(r.mist[k]));if(v)out.mist[k]=v}
+  if(isObj(r.days))for(const k in r.days)if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&isObj(r.days[k])){const n=num(r.days[k].n);out.days[k]={n,ok:Math.min(n,num(r.days[k].ok))}}
+  if(isObj(r.board))for(const k of ["n","ok","streak","best"])out.board[k]=num(r.board[k]);
+  return out;
+}
+function normStats(){stats=cleanStats(stats)}
 normStats();
 const fx=ok=>{try{window.__fx&&window.__fx(ok)}catch(e){}};
 const save=()=>{const j=JSON.stringify(stats);try{localStorage.setItem("sh-stats",j)}catch(e){}try{window.__save&&window.__save(j)}catch(e){}};
@@ -686,7 +697,6 @@ function answer(a){
   const mk=q.key+"|"+q.h;
   if(!ok)stats.mist[mk]=3;else if(stats.mist[mk]){stats.mist[mk]--;if(stats.mist[mk]<=0)delete stats.mist[mk]}
   recordDay(ok);save();
-  try{window.__ev&&window.__ev(q.kind==="o"?"open":q.hero==="BB"?"bb":"vs",ok)}catch(e){}
   document.querySelectorAll("#qActions button").forEach(b=>{b.disabled=true;if(b.dataset.a===right)b.classList.add("right")});
   let why;
   if(q.kind==="o"){const tok=findTok(RANGES[q.f][q.d][q.hero],q.h);
@@ -885,7 +895,7 @@ const STREET={3:"ФЛОП",4:"ТЁРН",5:"РИВЕР"};
 const C2=n=>n*(n-1)/2;
 let bq=null,bAnswered=false;
 
-function scoreBoard(ok){try{window.__ev&&window.__ev(bq&&bq.mode,ok)}catch(e){}const s=stats.board;s.n++;if(ok){s.ok++;s.streak++;s.best=Math.max(s.best,s.streak)}else s.streak=0;fx(ok);recordDay(ok);save();renderBoardStats();renderProgress()}
+function scoreBoard(ok){const s=stats.board;s.n++;if(ok){s.ok++;s.streak++;s.best=Math.max(s.best,s.streak)}else s.streak=0;fx(ok);recordDay(ok);save();renderBoardStats();renderProgress()}
 function boardChoices(opts,cls,handler){
   const ch=$("bChoices");ch.className="choices"+(cls?" "+cls:"");
   ch.innerHTML=opts.map((o,i)=>`<button data-i="${i}">${o}</button>`).join("");
@@ -1019,7 +1029,6 @@ segs();fillPosSelect();renderChart();refreshAll();deal();dealBoard();
 
 /* ---------- Telegram ---------- */
 (function(){
-  const STATS_URL="https://poker-stats.m2j7gs752t.workers.dev"; // адрес воркера статистики, без слэша в конце; пусто = статистика выключена
   const tg=window.Telegram&&window.Telegram.WebApp;
   const inTg=!!(tg&&tg.platform&&tg.platform!=="unknown");
   if(!inTg)return;
@@ -1032,24 +1041,6 @@ segs();fillPosSelect();renderChart();refreshAll();deal();dealBoard();
     if(c&&c.days){const local=Object.values(stats.days).reduce((a,d)=>a+d.n,0),remote=Object.values(c.days).reduce((a,d)=>a+d.n,0);
       if(remote>local){stats=c;refreshAll();deal()}}}catch(e){}});
 
-  /* статистика: счётчики копятся и отправляются пачкой, ошибки сети не мешают тренажёру */
-  if(!STATS_URL||!tg.initData)return;
-  let buf={},count=0,opened=true,timer=null;
-  const body=()=>JSON.stringify({initData:tg.initData,platform:tg.platform,open:opened?1:0,ev:buf});
-  function flush(beacon){
-    if(!count&&!opened)return;
-    const b=body();buf={};count=0;opened=false;
-    try{
-      if(beacon&&navigator.sendBeacon)navigator.sendBeacon(STATS_URL+"/api/event",new Blob([b],{type:"text/plain"}));
-      else fetch(STATS_URL+"/api/event",{method:"POST",headers:{"content-type":"text/plain"},body:b,keepalive:true}).catch(()=>{});
-    }catch(e){}
-  }
-  window.__ev=(mode,ok)=>{
-    if(!mode)return;const m=buf[mode]||(buf[mode]={n:0,ok:0});m.n++;if(ok)m.ok++;count++;
-    if(count>=10)flush();else{clearTimeout(timer);timer=setTimeout(()=>flush(),60000)}
-  };
-  document.addEventListener("visibilitychange",()=>{if(document.hidden)flush(true)});
-  setTimeout(()=>flush(),1500);
 })();
 
 </script>
