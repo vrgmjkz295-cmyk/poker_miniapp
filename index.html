@@ -686,6 +686,7 @@ function answer(a){
   const mk=q.key+"|"+q.h;
   if(!ok)stats.mist[mk]=3;else if(stats.mist[mk]){stats.mist[mk]--;if(stats.mist[mk]<=0)delete stats.mist[mk]}
   recordDay(ok);save();
+  try{window.__ev&&window.__ev(q.kind==="o"?"open":q.hero==="BB"?"bb":"vs",ok)}catch(e){}
   document.querySelectorAll("#qActions button").forEach(b=>{b.disabled=true;if(b.dataset.a===right)b.classList.add("right")});
   let why;
   if(q.kind==="o"){const tok=findTok(RANGES[q.f][q.d][q.hero],q.h);
@@ -884,7 +885,7 @@ const STREET={3:"ФЛОП",4:"ТЁРН",5:"РИВЕР"};
 const C2=n=>n*(n-1)/2;
 let bq=null,bAnswered=false;
 
-function scoreBoard(ok){const s=stats.board;s.n++;if(ok){s.ok++;s.streak++;s.best=Math.max(s.best,s.streak)}else s.streak=0;fx(ok);recordDay(ok);save();renderBoardStats();renderProgress()}
+function scoreBoard(ok){try{window.__ev&&window.__ev(bq&&bq.mode,ok)}catch(e){}const s=stats.board;s.n++;if(ok){s.ok++;s.streak++;s.best=Math.max(s.best,s.streak)}else s.streak=0;fx(ok);recordDay(ok);save();renderBoardStats();renderProgress()}
 function boardChoices(opts,cls,handler){
   const ch=$("bChoices");ch.className="choices"+(cls?" "+cls:"");
   ch.innerHTML=opts.map((o,i)=>`<button data-i="${i}">${o}</button>`).join("");
@@ -1018,7 +1019,7 @@ segs();fillPosSelect();renderChart();refreshAll();deal();dealBoard();
 
 /* ---------- Telegram ---------- */
 (function(){
-  const API_URL=""; // адрес сервера Cloudflare Worker, без слэша в конце
+  const STATS_URL="https://poker-stats.m2j7gs752t.workers.dev"; // адрес воркера статистики, без слэша в конце; пусто = статистика выключена
   const tg=window.Telegram&&window.Telegram.WebApp;
   const inTg=!!(tg&&tg.platform&&tg.platform!=="unknown");
   if(!inTg)return;
@@ -1026,22 +1027,29 @@ segs();fillPosSelect();renderChart();refreshAll();deal();dealBoard();
   tg.ready();tg.expand();theme();tg.onEvent("themeChanged",theme);
   window.__fx=ok=>{try{tg.HapticFeedback.notificationOccurred(ok?"success":"error")}catch(e){}};
   const cloud=tg.isVersionAtLeast&&tg.isVersionAtLeast("6.9");
-  let since=0;
-  window.__save=j=>{try{if(cloud)tg.CloudStorage.setItem("sh-stats",j)}catch(e){}if(API_URL&&++since>=10){since=0;sync()}};
+  window.__save=j=>{try{if(cloud)tg.CloudStorage.setItem("sh-stats",j)}catch(e){}};
   if(cloud)tg.CloudStorage.getItem("sh-stats",(err,v)=>{if(err||!v)return;try{const c=JSON.parse(v);
     if(c&&c.days){const local=Object.values(stats.days).reduce((a,d)=>a+d.n,0),remote=Object.values(c.days).reduce((a,d)=>a+d.n,0);
       if(remote>local){stats=c;refreshAll();deal()}}}catch(e){}});
-  if(!API_URL)return;
-  $("lbBlock").hidden=false;
-  const payload=()=>{const days={};Object.keys(stats.days).sort().slice(-14).forEach(k=>days[k]=stats.days[k]);return JSON.stringify({initData:tg.initData,days})};
-  async function sync(){
-    try{const r=await fetch(API_URL+"/api/sync",{method:"POST",headers:{"content-type":"text/plain"},body:payload()});
-      const d=await r.json();if(!d.top)return;
-      $("lbList").innerHTML=d.top.length?d.top.map((x,i)=>`<li class="${x.id===d.me?"me":""}"><span class="n">${i+1}</span><span>${x.name.replace(/[<>&]/g,"")}</span><span class="s">${x.ok}</span></li>`).join(""):'<li><span></span><span>На этой неделе пока пусто</span><span></span></li>';
-    }catch(e){$("lbList").innerHTML='<li><span></span><span>Рейтинг сейчас недоступен</span><span></span></li>'}
+
+  /* статистика: счётчики копятся и отправляются пачкой, ошибки сети не мешают тренажёру */
+  if(!STATS_URL||!tg.initData)return;
+  let buf={},count=0,opened=true,timer=null;
+  const body=()=>JSON.stringify({initData:tg.initData,platform:tg.platform,open:opened?1:0,ev:buf});
+  function flush(beacon){
+    if(!count&&!opened)return;
+    const b=body();buf={};count=0;opened=false;
+    try{
+      if(beacon&&navigator.sendBeacon)navigator.sendBeacon(STATS_URL+"/api/event",new Blob([b],{type:"text/plain"}));
+      else fetch(STATS_URL+"/api/event",{method:"POST",headers:{"content-type":"text/plain"},body:b,keepalive:true}).catch(()=>{});
+    }catch(e){}
   }
-  document.addEventListener("visibilitychange",()=>{if(document.hidden&&navigator.sendBeacon)navigator.sendBeacon(API_URL+"/api/sync",new Blob([payload()],{type:"text/plain"}))});
-  sync();
+  window.__ev=(mode,ok)=>{
+    if(!mode)return;const m=buf[mode]||(buf[mode]={n:0,ok:0});m.n++;if(ok)m.ok++;count++;
+    if(count>=10)flush();else{clearTimeout(timer);timer=setTimeout(()=>flush(),60000)}
+  };
+  document.addEventListener("visibilitychange",()=>{if(document.hidden)flush(true)});
+  setTimeout(()=>flush(),1500);
 })();
 
 </script>
